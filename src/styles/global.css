@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+@theme {
+    --font-mono: "Google Sans Code", monospace;
+    --color-bg: #001e29;
+    --color-bg2: #022633;
+    --color-heading: #01df72;
+    --color-text: #ffd6a7;
+    --color-muted: #7a9e95;
+    --color-border: #0a3040;
+}

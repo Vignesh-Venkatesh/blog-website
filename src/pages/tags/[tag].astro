@@ -1,0 +1,56 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "../../layouts/Layout.astro";
+import Navbar from "../../components/Navbar.astro";
+import PostCard from "../../components/PostCard.astro";
+import "../../styles/global.css";
+
+export async function getStaticPaths() {
+    const posts = await getCollection("blog", ({ data }) => !data.draft);
+    const tags = [...new Set(posts.flatMap((post) => post.data.tags))];
+
+    return tags.map((tag) => ({
+        params: { tag },
+        props: {
+            posts: posts
+                .filter((post) => post.data.tags.includes(tag))
+                .sort(
+                    (a, b) =>
+                        b.data.pubDate.getTime() - a.data.pubDate.getTime(),
+                ),
+        },
+    }));
+}
+
+const { tag } = Astro.params;
+const { posts } = Astro.props;
+---
+
+<Layout title={`#${tag} — Blog | Vignesh Venkatesh`}>
+    <Navbar />
+    <main class="py-10">
+        <a
+            href="/tags"
+            class="text-muted text-xs hover:text-heading font-semibold transition-colors mb-5"
+        >
+            ← all tags
+        </a>
+        <h1 class="text-heading text-3xl font-bold mt-6 mb-2">#{tag}</h1>
+        <p class="text-muted text-xs mb-10 font-semibold">
+            {posts.length} post{posts.length !== 1 ? "s" : ""}
+        </p>
+        <div class="flex flex-col gap-8">
+            {
+                posts.map((post) => (
+                    <PostCard
+                        title={post.data.title}
+                        description={post.data.description}
+                        pubDate={post.data.pubDate}
+                        tags={post.data.tags}
+                        slug={post.id}
+                    />
+                ))
+            }
+        </div>
+    </main>
+</Layout>
