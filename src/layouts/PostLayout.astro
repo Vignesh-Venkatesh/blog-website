@@ -25,7 +25,7 @@ const date = pubDate.toLocaleDateString("en-US", {
 
 <Layout title={`${title} — Blog | Vignesh Venkatesh`} description={description}>
     <Navbar />
-    <main class="max-w-3xl mx-auto px-12 py-14">
+    <main class="mx-auto py-14">
         <header class="mb-10 border-b border-border pb-8">
             <div class="flex gap-4 text-muted text-xs mb-3">
                 <span>{date}</span>
@@ -140,7 +140,7 @@ const date = pubDate.toLocaleDateString("en-US", {
         margin: 1.5rem 0 0.5rem;
     }
     .prose :global(p) {
-        margin-bottom: 1.25rem;
+        margin-bottom: 0.5rem;
     }
     .prose :global(a) {
         color: #01df72;
