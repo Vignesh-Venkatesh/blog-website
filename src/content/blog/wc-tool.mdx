@@ -1,0 +1,66 @@
+---
+title: 'wordy - a wc Tool in Go'
+description: "This blog post goes over how I built wc (Linux command utility) in Go"
+pubDate: 2026-04-18T23:00:00
+tags: ["wc", "linux", "go"]
+draft: false
+---
+
+Hey there!
+
+In this (*short*) post, I'll be walking you through how I built **wordy**, a clone of `wc`, which is a Linux command line utility for counting words, lines, and bytes in a file. The primary reason I took up this project was to refine my skills in Go (as mentioned in my previous post, I am learning Go). The project wasn't complex, but it did teach me how to make use of a few packages from Go's standard library.
+
+So, let's get started!
+
+---
+## What is `wc` and how does it work?!
+*"But Vignesh, what is `wc`? and... how does it work?!"*, you may ask. Well, it is a simple word count tool. It has the ability to count the number of words, lines, characters and the size of a file in bytes. For this project, I've kept the scope small and only implemented the `-l`, `-w`, and `-c` flags.
+
+> `-c` (byte count), `-w` (word count), `-l` (line count)
+
+I named my binary `wordy` to give it some *cutesy* vibe 😊
+
+---
+## Setting up the project
+Since the scope was small, I didn't use any external libraries, just Go's standard library. This project was mainly done to get myself more comfortable with Go. I used the following packages:
+
+- `os` -> for file handling
+- `bufio` -> for efficient reading
+- `strings` -> for parsing words
+
+---
+## Parsing arguments
+The first step was handling CLI arguments. I needed to separate:
+- flags (`-l`, `-w`, `-c`)
+- file names
+
+I also made sure that, if no flags are provided, all counts are shown by default (similar to the real `wc` tool).
+
+---
+## Counting lines, words, and bytes
+I used `bufio.Reader` to read line by line, incrementing the line count per newline and counting words with `strings.Fields()`. For getting the size of the file (in bytes), I used `os.Stat().Size()`, which is a cheap metadata call, and doesn't require reading the file contents at all.
+
+
+### A small hiccup...
+Initially, I was counting words incorrectly using `strings.Split(line, " ")`. This was wrong because multiple spaces would create empty entries, and it didn't handle tabs or other whitespace. So, I switched to `strings.Fields(line)`, and this fixed it. It splits on any whitespace and ignores duplicates.
+
+
+### Another thing to be aware of...
+`bufio.Reader.ReadString('\n')` only increments the line count when it finds a newline character. This means if the last line of a file doesn't end with `\n`, it won't be counted. 
+> Worth keeping in mind if you're processing files that don't end with a newline.
+
+---
+## Error handling
+For each file, if it doesn't exist, an error is printed and the program continues processing the remaining files. This *kinda* emulates how most `UNIX` tools behave, which don't crash on a single failure.
+
+---
+## Final thoughts
+Although the project was small, it helped me get comfortable with file I/O in Go and helped me understand how CLI tools are structured. Maybe if I were to revisit this, I'd implement reading from `stdin`, so you could pipe data into it like `cat file.txt | wordy`
+
+---
+## Links
+Here's the source code: [Github](https://github.com/Vignesh-Venkatesh/wordy)
+
+---
+## References
+1. https://codingchallenges.fyi/challenges/challenge-wc
