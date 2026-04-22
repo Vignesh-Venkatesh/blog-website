@@ -32,7 +32,7 @@ There are three levels to this. **DNS** basically works like a chain of *"who do
   1. **Root Servers**: These are the starting point. They don't know the answer to your question, but they know where to send you next based on the ending of the domain (like `.com`, `.org`, `.net`)
   2. **TLD (Top Level Domain) servers**: These handle specific endings like `.com` or `.org`. When the root server points you here, the TLD server says, *"Okay, for this domain, go ask that specific server"*
   3. **Authoritative Server**: This is basically the final stop. These servers actually know the real DNS records for the domain and give you the **IP** address you need.
-  
+
 In short, the root points you in the right direction, TLD narrows it down, and authoritative gives you the actual answer
 
 Here's an example:
@@ -95,7 +95,7 @@ This is the structure of a query packet's header[^1]
 ```
 
 Each field is as follows:
-  - 12 34 -> ID 
+  - 12 34 -> ID
   - 01 00 -> Flags
     - Since its `0000 0001 0000 0000` in binary
     - it is, standard query, recursion desired
@@ -161,7 +161,7 @@ It's stored as a sequence of bytes.
 03 63 6f 6d
 00
 ```
-- `06 67 6f 6f 67 6c 65` 
+- `06 67 6f 6f 67 6c 65`
   - The first byte (`06`) is the length of the string.
   - Followed by the string itself in byte format, and when converting it using the `ASCII` table, it spells out `google`.
 - `03 63 6f 6d`
@@ -275,13 +275,13 @@ c0 0c
 This is how you read it:
   - The first **two bits** are always `11`, which signifies that its a pointer.
   - The remaining **14 bits** represent an **offset** (position) in the DNS message.
-  
+
 So let's break it down:
 
 `c0 0c` = `11000000` `00001100` in binary.
   - `11`-> pointer indicator.
   - `00000000001100` -> offset `0x00c`, which is **12** in decimal.
-  - Hence this means, 
+  - Hence this means,
     - Jump to byte **12** in the message and read the domain name from there
 
 Now, if we take a look at the original query
@@ -296,7 +296,7 @@ This is how I handled it in code:
 // parser.go
 i := offset
 jumped := false
-var endOffset int 
+var endOffset int
 for {
 	// ...
 	length := int(data[i])
@@ -402,7 +402,7 @@ for {
 			connection.Close()
 			return nil, err
 		}
-		
+
 		// ...
 ```
 At this point, we've asked a server and parsed its response. Now we decide what to do next.
@@ -466,10 +466,10 @@ if !found {
 			if err != nil {
 				return nil, fmt.Errorf("could not resolve %s", domain)
 			}
-	
+
 			// converting label bytes to domain string
 			nsHostname := LabelsToString(nsName)
-	
+
 			// resolving NS hostname to IP
 			nsIP, err := Resolve(ResolverInput{
 				Domain:  nsHostname,
@@ -478,7 +478,7 @@ if !found {
 			if err != nil {
 				continue // trying next NS record
 			}
-	
+
 			nameserver = nsIP.String()
 			found = true
 			break
@@ -489,7 +489,7 @@ if !found {
 The resolver pauses what it's doing and **resolves the nameserver itself** before continuing.
 
 Right now, the resolver first tries to use glue records from the Additional section, and the authority/NS fallback logic only kicks in if no usable glue records are found (when `found` remains false after scanning the **Additional** section).
- 
+
 ---
 ## Takeaways
 Before building this, I thought DNS was just a simple lookup table somewhere on the internet. Only after I began researching for this project did I realize that it was a tightly packed protocol with structure. The most rewarding part to implement were the compression pointer resolutions. The idea in itself was pretty smart, which helped eliminate redundant name storage and save space. The thing that surprised me the most was that some of the domains didn't include glue records in their referral responses, which meant I (*my resolver actually*) had to recursively resolve the nameserver's domain before I could continue.

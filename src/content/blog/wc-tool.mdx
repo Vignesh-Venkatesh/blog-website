@@ -46,7 +46,7 @@ Initially, I was counting words incorrectly using `strings.Split(line, " ")`. Th
 
 
 ### Another thing to be aware of...
-`bufio.Reader.ReadString('\n')` only increments the line count when it finds a newline character. This means if the last line of a file doesn't end with `\n`, it won't be counted. 
+`bufio.Reader.ReadString('\n')` only increments the line count when it finds a newline character. This means if the last line of a file doesn't end with `\n`, it won't be counted.
 > Worth keeping in mind if you're processing files that don't end with a newline.
 
 ---

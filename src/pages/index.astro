@@ -1,35 +1,83 @@
 ---
-import { getCollection } from "astro:content";
 import Layout from "../layouts/Layout.astro";
+import HatchDivider from "../components/HatchDivider.astro";
 import Navbar from "../components/Navbar.astro";
-import PostCard from "../components/PostCard.astro";
-import "../styles/global.css";
-import readingTime from "reading-time";
+import { getCollection, type CollectionEntry } from "astro:content";
 
-const posts = await getCollection("blog", ({ data }) => !data.draft);
+const posts: CollectionEntry<"blog">[] = await getCollection(
+    "blog",
+    (post: CollectionEntry<"blog">) => !post.data.draft,
+);
+
 const sortedPosts = posts.sort(
     (a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime(),
 );
+
+const formatDate = (date: Date) =>
+    new Intl.DateTimeFormat("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+    }).format(date);
 ---
 
 <Layout title="Blog | Vignesh Venkatesh">
-    <Navbar />
-    <main class="py-10">
-        <p class="text-muted text-sm mb-5">/blog</p>
-        <h1 class="text-heading text-3xl font-bold mb-10">all posts</h1>
-        <div class="flex flex-col gap-8">
-            {
-                sortedPosts.map((post) => (
-                    <PostCard
-                        title={post.data.title}
-                        description={post.data.description}
-                        pubDate={post.data.pubDate}
-                        tags={post.data.tags}
-                        slug={post.id}
-                        readingTime={readingTime(post.body ?? "").text}
-                    />
-                ))
-            }
+    <main>
+        <div class="sticky top-0 backdrop-blur-md">
+            <div class="max-w-3xl mx-auto">
+                <Navbar />
+            </div>
+            <HatchDivider />
+        </div>
+
+        <div
+            class="max-w-3xl mx-auto border-x border-x-separator/50 px-6 sm:px-8"
+        >
+            <h1 class="text-3xl font-bold mt-10 mb-5 text-secondary">
+                all_posts
+            </h1>
+
+            <div>
+                {
+                    sortedPosts.map((post, i) => (
+                        <>
+                            {i !== 0 && (
+                                <div class="-mx-6 sm:-mx-8">
+                                    <HatchDivider />
+                                </div>
+                            )}
+                            <a
+                                href={`/blog/${post.id}`}
+                                class="block px-0 py-6 hover:opacity-75 transition-opacity duration-200"
+                            >
+                                <div class="flex justify-between items-baseline gap-4 mb-3">
+                                    <p class="text-xl font-bold text-secondary">
+                                        {post.data.title}
+                                    </p>
+                                    <p class="text-sm text-tertiary whitespace-nowrap shrink-0">
+                                        {formatDate(post.data.pubDate)}
+                                    </p>
+                                </div>
+                                <p class="text-sm mb-4 leading-relaxed">
+                                    {post.data.description}
+                                </p>
+                                <div class="flex flex-wrap gap-2">
+                                    {post.data.tags
+                                        .slice(0, 3)
+                                        .map((tag: string) => (
+                                            <span
+                                                class="text-xs px-2 py-1 text-button-text rounded bg-button hover:text-green transition-colors duration-200"
+                                                onclick={`event.preventDefault(); window.location='/tags/${tag}'`}
+                                            >
+                                                #{tag}
+                                            </span>
+                                        ))}
+                                </div>
+                            </a>
+                        </>
+                    ))
+                }
+            </div>
         </div>
     </main>
 </Layout>
