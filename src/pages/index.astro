@@ -41,6 +41,8 @@ const formatDate = (date: Date) =>
                 all_posts
             </h1>
 
+            <HatchDivider />
+
             <div>
                 {
                     sortedPosts.map((post, i) => (
@@ -48,7 +50,7 @@ const formatDate = (date: Date) =>
                             {i !== 0 && <HatchDivider />}
                             <a
                                 href={`/blog/${post.id}`}
-                                class="block py-6 hover:opacity-75 transition-opacity duration-200 px-6 sm:px-8"
+                                class="block py-6 opacity-75 hover:opacity-100 transition-all border-l-2 border-transparent hover:border-l-green duration-200 px-6 sm:px-8"
                             >
                                 <div class="flex justify-between items-baseline gap-4 mb-3">
                                     <p class="text-xl font-bold text-secondary">

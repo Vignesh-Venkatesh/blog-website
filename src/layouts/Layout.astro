@@ -13,6 +13,10 @@ const { title, description = "Blog | Vignesh Venkatesh" } = Astro.props;
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="description" content={description} />
         <title>{title}</title>
+        <script
+            defer
+            src="https://analytics.vigneshvenkatesh.com/script.js"
+            data-website-id="6a7c185e-5995-4caa-acbe-157323558b05"></script>
     </head>
     <body class="bg-(--bg-deep-bg) text-primary min-h-screen flex flex-col">
         <slot />
