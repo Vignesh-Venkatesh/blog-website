@@ -2,6 +2,7 @@
 import Layout from "../layouts/Layout.astro";
 import HatchDivider from "../components/HatchDivider.astro";
 import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
 import { getCollection, type CollectionEntry } from "astro:content";
 
 const posts: CollectionEntry<"blog">[] = await getCollection(
@@ -22,7 +23,8 @@ const formatDate = (date: Date) =>
 ---
 
 <Layout title="Blog | Vignesh Venkatesh">
-    <main>
+    <main class="flex-1 flex flex-col">
+        <!-- navbar -->
         <div class="sticky top-0 backdrop-blur-md">
             <div class="max-w-3xl mx-auto">
                 <Navbar />
@@ -31,9 +33,11 @@ const formatDate = (date: Date) =>
         </div>
 
         <div
-            class="max-w-3xl mx-auto border-x border-x-separator/50 px-6 sm:px-8"
+            class="max-w-3xl mx-auto border-x border-x-separator/50 flex-1 flex flex-col w-full"
         >
-            <h1 class="text-3xl font-bold mt-10 mb-5 text-secondary">
+            <h1
+                class="text-3xl font-bold pt-10 pb-5 text-secondary px-6 sm:px-8"
+            >
                 all_posts
             </h1>
 
@@ -41,14 +45,10 @@ const formatDate = (date: Date) =>
                 {
                     sortedPosts.map((post, i) => (
                         <>
-                            {i !== 0 && (
-                                <div class="-mx-6 sm:-mx-8">
-                                    <HatchDivider />
-                                </div>
-                            )}
+                            {i !== 0 && <HatchDivider />}
                             <a
                                 href={`/blog/${post.id}`}
-                                class="block px-0 py-6 hover:opacity-75 transition-opacity duration-200"
+                                class="block py-6 hover:opacity-75 transition-opacity duration-200 px-6 sm:px-8"
                             >
                                 <div class="flex justify-between items-baseline gap-4 mb-3">
                                     <p class="text-xl font-bold text-secondary">
@@ -78,6 +78,10 @@ const formatDate = (date: Date) =>
                     ))
                 }
             </div>
+
+            <HatchDivider />
+            <Footer />
+            <HatchDivider />
         </div>
     </main>
 </Layout>

@@ -1,0 +1,166 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import HatchDivider from "../../components/HatchDivider.astro";
+import Navbar from "../../components/Navbar.astro";
+import Footer from "../../components/Footer.astro";
+import { getCollection, render, type CollectionEntry } from "astro:content";
+import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
+
+const formatDate = (date: Date) =>
+    new Intl.DateTimeFormat("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+    }).format(date);
+
+export async function getStaticPaths() {
+    const posts = await getCollection(
+        "blog",
+        (post: CollectionEntry<"blog">) => !post.data.draft,
+    );
+
+    posts.sort(
+        (a: CollectionEntry<"blog">, b: CollectionEntry<"blog">) =>
+            b.data.pubDate.getTime() - a.data.pubDate.getTime(),
+    );
+
+    return posts.map((post: CollectionEntry<"blog">, i: number) => ({
+        params: { id: post.id },
+        props: {
+            post,
+            prev: posts[i + 1] ?? null,
+            next: posts[i - 1] ?? null,
+        },
+    }));
+}
+
+const { post, prev, next } = Astro.props as {
+    post: CollectionEntry<"blog">;
+    prev: CollectionEntry<"blog"> | null;
+    next: CollectionEntry<"blog"> | null;
+};
+
+const rendered = await render(post);
+---
+
+<Layout title={`${post.data.title} | Vignesh Venkatesh`}>
+    <main class="flex-1 flex flex-col">
+        <!-- navbar -->
+        <div class="sticky top-0 backdrop-blur-md">
+            <div class="max-w-3xl mx-auto">
+                <Navbar />
+            </div>
+            <HatchDivider />
+        </div>
+
+        <div
+            class="max-w-3xl mx-auto border-x border-x-separator/50 flex-1 flex flex-col w-full"
+        >
+            <!-- header -->
+            <div class="px-6 sm:px-8 pt-10 pb-6">
+                <!-- all posts button -->
+                <a
+                    href="/"
+                    class="inline-flex items-center gap-2 font-google text-xs text-tertiary hover:text-green transition-colors group"
+                >
+                    <div
+                        class="flex items-center gap-2 group-hover:gap-1 transition-all duration-200"
+                    >
+                        <FaArrowLeft size={10} />
+                        <p>all posts</p>
+                    </div>
+                </a>
+
+                <!-- tags -->
+                <div class="flex flex-wrap gap-2 my-4 items-center">
+                    <p class="text-xs text-tertiary font-semibold">tags:</p>
+                    {
+                        post.data.tags.map((tag: string) => (
+                            <a
+                                href={`/tags/${tag}`}
+                                class="text-xs px-2 py-1 text-button-text rounded bg-button hover:text-green transition-colors duration-200"
+                            >
+                                <p>#{tag}</p>
+                            </a>
+                        ))
+                    }
+                </div>
+
+                <!-- title -->
+                <h1
+                    class="text-3xl font-bold text-secondary my-4 leading-tight"
+                >
+                    {post.data.title}
+                </h1>
+
+                <!-- pubDate & reading time -->
+                <div
+                    class="flex items-center gap-3 font-mono text-xs text-tertiary"
+                >
+                    <span>{formatDate(post.data.pubDate)}</span>
+                </div>
+            </div>
+
+            <HatchDivider />
+
+            <!-- content -->
+            <div class="px-6 sm:px-8 py-8 prose-styles">
+                <rendered.Content />
+            </div>
+
+            <!-- prev & next buttons -->
+            {
+                (prev || next) && (
+                    <>
+                        <HatchDivider />
+
+                        <div class="grid grid-cols-2 divide-x divide-separator/50">
+                            <!-- prev post button -->
+                            <div>
+                                {prev && (
+                                    <a
+                                        href={`/blog/${prev.id}`}
+                                        class="group block px-6 sm:px-8 py-6 hover:opacity-75 transition-opacity duration-200"
+                                    >
+                                        <div class="text-sm">
+                                            <div class="text-tertiary flex items-center gap-2 group-hover:gap-1 group-hover:text-green transition-all duration-200">
+                                                <FaArrowLeft size={10} />
+                                                <p>previous</p>
+                                            </div>
+                                            <p class="text-secondary">
+                                                {prev.data.title}
+                                            </p>
+                                        </div>
+                                    </a>
+                                )}
+                            </div>
+
+                            <!-- next post button -->
+                            <div>
+                                {next && (
+                                    <a
+                                        href={`/blog/${next.id}`}
+                                        class="group block px-6 sm:px-8 py-6 hover:opacity-75 transition-opacity duration-200"
+                                    >
+                                        <div class="text-sm text-end">
+                                            <div class="text-tertiary justify-end flex items-center gap-2 group-hover:gap-1 group-hover:text-green transition-all duration-200">
+                                                <p>next</p>
+                                                <FaArrowRight size={10} />
+                                            </div>
+                                            <p class="text-secondary">
+                                                {next.data.title}
+                                            </p>
+                                        </div>
+                                    </a>
+                                )}
+                            </div>
+                        </div>
+                    </>
+                )
+            }
+            <HatchDivider/>
+            <Footer/>
+            <HatchDivider/>
+        </div>
+    </main>
+</Layout>

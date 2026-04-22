@@ -24,9 +24,154 @@
     --color-card: #0f0f12;
 
     --color-button: #111113;
-    --color-button-text: #4e4e56;
+    --color-button-text: #7b7b87;
 }
 
 html {
     scroll-behavior: smooth;
+}
+
+.prose-styles {
+    @apply text-sm leading-relaxed;
+}
+
+.prose-styles h1 {
+    @apply text-3xl font-bold text-green/90 my-4;
+}
+
+.prose-styles h2 {
+    @apply text-2xl font-bold text-green/90 my-4;
+}
+
+.prose-styles h3 {
+    @apply text-xl font-bold text-green/90 my-4;
+}
+
+.prose-styles h4 {
+    @apply text-lg font-bold text-green/90 my-4;
+}
+
+.prose-styles h5 {
+    @apply text-base font-bold text-green/90 my-4;
+}
+
+.prose-styles h6 {
+    @apply text-sm font-bold text-green/90 my-4;
+}
+
+.prose-styles p {
+    @apply mb-2 text-secondary/85 leading-relaxed font-google;
+}
+
+.prose-styles a {
+    @apply text-green/80 font-bold underline underline-offset-2 hover:opacity-75 transition-opacity;
+}
+
+.prose-styles code {
+    @apply font-gesit-mono text-xs bg-button text-secondary/85 px-1.5 py-0.5 rounded;
+}
+
+.prose-styles pre {
+    @apply bg-button rounded p-4 overflow-x-auto my-6;
+}
+
+.prose-styles pre code {
+    @apply bg-transparent p-0 text-xs leading-relaxed;
+}
+
+.prose-styles blockquote {
+    @apply border-l-3 border-green/70 pl-4 italic my-6;
+}
+
+.prose-styles ul {
+    @apply list-none mb-4;
+}
+
+.prose-styles ul li {
+    @apply pl-4 relative;
+}
+
+.prose-styles ul li::before {
+    content: "·";
+    @apply absolute left-0;
+}
+
+.prose-styles ol {
+    @apply list-decimal list-inside mb-4;
+}
+
+.prose-styles ul ul,
+.prose-styles ol ul {
+    @apply mt-0 mb-0 pl-4;
+}
+
+.prose-styles ul ol,
+.prose-styles ol ol {
+    @apply mt-2 mb-0 pl-4 list-decimal list-inside;
+}
+
+.prose-styles ul,
+.prose-styles ol {
+    @apply text-secondary/90;
+}
+
+.prose-styles hr {
+    @apply border-separator/50 my-6;
+}
+
+.prose-styles strong {
+    @apply font-extrabold text-secondary/90;
+}
+
+.prose-styles em {
+    @apply italic;
+}
+
+.prose-styles s,
+.prose-styles del {
+    @apply line-through text-secondary/80;
+}
+
+.prose-styles img {
+    @apply rounded my-6 w-full;
+}
+
+.prose-styles table {
+    @apply w-full text-sm my-6 border-collapse;
+}
+
+.prose-styles thead {
+    @apply border-b border-separator/50;
+}
+
+.prose-styles th {
+    @apply text-left font-bold text-secondary py-2 px-3;
+}
+
+.prose-styles td {
+    @apply text-tertiary py-2 px-3 border-b border-separator/30;
+}
+
+.prose-styles tr:last-child td {
+    @apply border-b-0;
+}
+
+.prose-styles sup {
+    @apply text-xs text-green font-mono;
+}
+
+.prose-styles sup a {
+    @apply no-underline hover:underline;
+}
+
+.prose-styles [data-footnotes] {
+    @apply mt-10 pt-6;
+}
+
+.prose-styles [data-footnotes] li {
+    @apply text-xs text-tertiary mb-2;
+}
+
+.prose-styles [data-footnotes] li::before {
+    content: "";
 }
