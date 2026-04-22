@@ -17,8 +17,16 @@ const { title, description = "Blog | Vignesh Venkatesh" } = Astro.props;
             defer
             src="https://analytics.vigneshvenkatesh.com/script.js"
             data-website-id="6a7c185e-5995-4caa-acbe-157323558b05"></script>
+        <link
+            rel="alternate"
+            type="application/rss+xml"
+            title="Vignesh's Blog"
+            href="/rss.xml"
+        />
     </head>
-    <body class="bg-(--bg-deep-bg) text-primary min-h-screen flex flex-col">
+    <body
+        class="bg-(--bg-deep-bg) text-primary min-h-screen flex flex-col font-google"
+    >
         <slot />
     </body>
 </html>

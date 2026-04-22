@@ -16,4 +16,5 @@ export default defineConfig({
   vite: {
     plugins: [tailwindcss()],
   },
+  site: "http://localhost:4321",
 });
