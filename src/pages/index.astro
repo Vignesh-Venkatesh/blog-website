@@ -62,16 +62,14 @@ const formatDate = (date: Date) =>
                                     {post.data.description}
                                 </p>
                                 <div class="flex flex-wrap gap-2">
-                                    {post.data.tags
-                                        .slice(0, 3)
-                                        .map((tag: string) => (
-                                            <span
-                                                class="text-xs px-2 py-1 text-button-text rounded bg-button hover:text-green transition-colors duration-200"
-                                                onclick={`event.preventDefault(); window.location='/tags/${tag}'`}
-                                            >
-                                                #{tag}
-                                            </span>
-                                        ))}
+                                    {post.data.tags.map((tag: string) => (
+                                        <span
+                                            class="text-xs px-2 py-1 text-button-text rounded bg-button hover:text-green transition-colors duration-200"
+                                            onclick={`event.preventDefault(); window.location='/tags/${tag}'`}
+                                        >
+                                            #{tag}
+                                        </span>
+                                    ))}
                                 </div>
                             </a>
                         </>
