@@ -99,12 +99,31 @@ const rendered = await render(post);
                 >
                     <span>{formatDate(post.data.pubDate)}</span>
                 </div>
+
+                <!-- font toggle -->
+                <div class="mt-4 flex items-center gap-2 text-xs text-tertiary">
+                    <span>font —</span>
+                    <div class="flex border border-separator/50 rounded overflow-hidden">
+                        <button
+                            id="btn-mono"
+                            class="px-3 py-1 transition-colors duration-200 bg-button text-green hover:cursor-pointer"
+                        >
+                            mono
+                        </button>
+                        <button
+                            id="btn-serif"
+                            class="px-3 py-1 transition-colors duration-200 text-tertiary hover:cursor-pointer"
+                        >
+                            serif
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <HatchDivider />
 
             <!-- content -->
-            <div class="px-6 sm:px-8 py-8 prose-styles">
+            <div id="post-content" class="px-6 sm:px-8 py-8 prose-styles font-google">
                 <rendered.Content />
             </div>
 
@@ -164,3 +183,28 @@ const rendered = await render(post);
         </div>
     </main>
 </Layout>
+
+
+<script>
+    const btnMono = document.getElementById("btn-mono");
+    const btnSerif = document.getElementById("btn-serif");
+    const content = document.getElementById("post-content");
+
+    btnMono?.addEventListener("click", () => {
+        content?.classList.remove("font-ibm");
+        content?.classList.add("font-google");
+        btnMono.classList.add("bg-button", "text-green");
+        btnMono.classList.remove("text-tertiary");
+        btnSerif?.classList.remove("bg-button", "text-primary");
+        btnSerif?.classList.add("text-tertiary");
+    });
+
+    btnSerif?.addEventListener("click", () => {
+        content?.classList.remove("font-google");
+        content?.classList.add("font-ibm");
+        btnSerif.classList.add("bg-button", "text-green");
+        btnSerif.classList.remove("text-tertiary");
+        btnMono?.classList.remove("bg-button", "text-primary");
+        btnMono?.classList.add("text-tertiary");
+    });
+</script>
