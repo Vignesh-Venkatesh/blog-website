@@ -5,8 +5,7 @@ pubDate: 2026-04-18T23:00:00
 tags: ["wc", "linux", "go"]
 draft: false
 ---
-import Tip from '../../components/mdx/Tip.astro';
-import Kiss from '../../components/mdx/Kiss.astro';
+import Callout from '../../components/mdx/Callout.astro';
 
 Hey there!
 
@@ -20,7 +19,7 @@ So, let's get started!
 
 > `-c` (byte count), `-w` (word count), `-l` (line count)
 
-<Kiss>I named my binary `wordy` to give it a ***cutesy*** vibe 😊</Kiss>
+<Callout variant="cute">I named my binary `wordy` to give it a ***cutesy*** vibe 😊</Callout>
 
 ---
 ## Setting up the project
@@ -49,7 +48,8 @@ Initially, I was counting words incorrectly using `strings.Split(line, " ")`. Th
 
 ### Another thing to be aware of...
 `bufio.Reader.ReadString('\n')` only increments the line count when it finds a newline character. This means if the last line of a file doesn't end with `\n`, it won't be counted.
-<Tip text="Worth keeping in mind if you're processing files that don't end with a newline." />
+
+<Callout variant="tip" >Worth keeping in mind if you're processing files that don't end with a newline.</Callout>
 ---
 ## Error handling
 For each file, if it doesn't exist, an error is printed and the program continues processing the remaining files. This *kinda* emulates how most `UNIX` tools behave, which don't crash on a single failure.
