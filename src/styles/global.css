@@ -71,7 +71,7 @@ html {
 }
 
 .prose-styles code {
-    @apply font-gesit-mono text-xs bg-button text-secondary/85 px-1.5 py-0.5 rounded;
+    @apply font-gesit-mono text-xs bg-button text-green/80 px-1.5 py-0.5 rounded;
 }
 
 .prose-styles pre {
