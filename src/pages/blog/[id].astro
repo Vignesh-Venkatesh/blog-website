@@ -69,10 +69,14 @@ const rendered = await render(post);
         </div>
 
         <div
-            class="max-w-3xl mx-auto border-x border-x-separator/50 flex-1 flex flex-col w-full"
+            class="max-w-5xl mx-auto flex-1 flex flex-col w-full"
         >
-            <!-- header -->
-            <div class="px-6 sm:px-8 pt-10 pb-6">
+            <div class="grid lg:grid-cols-[minmax(0,3fr)_14rem] lg:gap-10">
+                <div
+                    class="max-w-3xl border-x border-x-separator/50 flex flex-col w-full"
+                >
+                    <!-- header -->
+                    <div class="px-6 sm:px-8 pt-10 pb-6">
                 <!-- all posts button -->
                 <a
                     href="/"
@@ -133,22 +137,22 @@ const rendered = await render(post);
                         </button>
                     </div>
                 </div>
-            </div>
+                    </div>
 
-            <HatchDivider />
+                    <HatchDivider />
 
-            <!-- content -->
-            <div id="post-content" class="px-6 sm:px-8 py-8 prose-styles font-google">
-                <rendered.Content />
-            </div>
+                    <!-- content -->
+                    <div id="post-content" class="px-6 sm:px-8 py-8 prose-styles font-google">
+                        <rendered.Content />
+                    </div>
 
-            <!-- prev & next buttons -->
-            {
-                (prev || next) && (
-                    <>
-                        <HatchDivider />
+                    <!-- prev & next buttons -->
+                    {
+                        (prev || next) && (
+                            <>
+                                <HatchDivider />
 
-                        <div class="grid grid-cols-2 divide-x divide-separator/50">
+                                <div class="grid grid-cols-2 divide-x divide-separator/50">
                             <!-- prev post button -->
                             <div>
                                 {prev && (
@@ -188,13 +192,27 @@ const rendered = await render(post);
                                     </a>
                                 )}
                             </div>
-                        </div>
-                    </>
-                )
-            }
-            <HatchDivider/>
-            <Footer/>
-            <HatchDivider/>
+                                </div>
+                            </>
+                        )
+                    }
+                    <HatchDivider />
+                    <Footer />
+                    <HatchDivider />
+                </div>
+
+                <aside
+                    id="table-of-contents"
+                    class="order-last hidden px-4 py-8 lg:order-none lg:block lg:px-0 lg:py-10"
+                >
+                    <nav class="sticky top-24" aria-label="Table of contents">
+                        <p class="mb-3 font-mono text-[10px] uppercase tracking-widest text-tertiary">
+                            on this page
+                        </p>
+                        <ul id="toc-list" class="space-y-1 border-l border-separator/70"></ul>
+                    </nav>
+                </aside>
+            </div>
         </div>
     </main>
 </Layout>
@@ -205,6 +223,61 @@ const rendered = await render(post);
     const btnSerif = document.getElementById("btn-serif");
     const content = document.getElementById("post-content");
     const progress = document.getElementById("reading-progress");
+    const tableOfContents = document.getElementById("table-of-contents");
+    const tocList = document.getElementById("toc-list");
+
+    const headings = Array.from(content?.querySelectorAll("h2, h3") ?? []);
+
+    headings.forEach((heading, index) => {
+        if (!heading.id) {
+            heading.id = `${heading.textContent?.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "section"}-${index}`;
+        }
+
+        const link = document.createElement("a");
+        link.href = `#${heading.id}`;
+        link.textContent = heading.textContent?.trim() || "section";
+        link.className = "block border-l-2 border-transparent px-3 py-1 text-xs leading-relaxed text-tertiary transition-colors hover:border-green/50 hover:text-green";
+
+        if (heading.tagName === "H3") {
+            link.classList.add("pl-5", "text-[11px]");
+        }
+
+        const item = document.createElement("li");
+        item.append(link);
+        tocList?.append(item);
+    });
+
+    if (headings.length === 0 && tableOfContents) {
+        tableOfContents.remove();
+    }
+
+    const tocLinks = Array.from(tocList?.querySelectorAll("a") ?? []);
+    const setActiveHeading = (id: string) => {
+        tocLinks.forEach((link) => {
+            const active = link.getAttribute("href") === `#${id}`;
+            link.classList.toggle("border-green", active);
+            link.classList.toggle("text-green", active);
+            link.classList.toggle("text-tertiary", !active);
+            if (active) link.setAttribute("aria-current", "location");
+            else link.removeAttribute("aria-current");
+        });
+    };
+
+    if (headings.length > 0) {
+        setActiveHeading(headings[0].id);
+        const headingObserver = new IntersectionObserver(
+            (entries) => {
+                const visibleHeading = entries
+                    .filter((entry) => entry.isIntersecting)
+                    .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+
+                if (visibleHeading) setActiveHeading(visibleHeading.target.id);
+            },
+            { rootMargin: "-15% 0px -70% 0px" },
+        );
+
+        headings.forEach((heading) => headingObserver.observe(heading));
+    }
 
     const updateReadingProgress = () => {
         if (!progress) return;

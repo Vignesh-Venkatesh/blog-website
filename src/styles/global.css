@@ -39,27 +39,27 @@ html {
 }
 
 .prose-styles h1 {
-    @apply text-3xl font-bold text-green/90 my-4 font-[inherit];
+    @apply scroll-mt-24 text-3xl font-bold text-green/90 my-4 font-[inherit];
 }
 
 .prose-styles h2 {
-    @apply text-2xl font-bold text-green/90 my-4 font-[inherit];
+    @apply scroll-mt-24 text-2xl font-bold text-green/90 my-4 font-[inherit];
 }
 
 .prose-styles h3 {
-    @apply text-xl font-bold text-green/90 my-4 font-[inherit];
+    @apply scroll-mt-24 text-xl font-bold text-green/90 my-4 font-[inherit];
 }
 
 .prose-styles h4 {
-    @apply text-lg font-bold text-green/90 my-4 font-[inherit];
+    @apply scroll-mt-24 text-lg font-bold text-green/90 my-4 font-[inherit];
 }
 
 .prose-styles h5 {
-    @apply text-base font-bold text-green/90 my-4 font-[inherit];
+    @apply scroll-mt-24 text-base font-bold text-green/90 my-4 font-[inherit];
 }
 
 .prose-styles h6 {
-    @apply text-sm font-bold text-green/90 my-4 font-[inherit];
+    @apply scroll-mt-24 text-sm font-bold text-green/90 my-4 font-[inherit];
 }
 
 .prose-styles p {
