@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 720" role="img" aria-labelledby="title description">
+  <title id="title">MovieBoxd fake user architecture</title>
+  <desc id="description">Configuration flows into a seed orchestrator, which coordinates client actions, movie data, and an Ollama language model before reaching the MovieBoxd API.</desc>
+  <defs>
+    <style>
+      .box { fill: #0f0f12; stroke: #737373; stroke-opacity: .5; stroke-width: 2; }
+      .label { font: 700 20px 'Google Sans Code', monospace; }
+      .body { fill: #e0e0e0; font: 14px 'Google Sans Code', monospace; }
+      .arrow {
+        fill: none;
+        stroke: #a1a1a1;
+        stroke-width: 2;
+        stroke-dasharray: 7 7;
+        animation: flow 1.6s linear infinite;
+      }
+      .branch {
+        fill: none;
+        stroke: #a1a1a1;
+        stroke-width: 2;
+        stroke-dasharray: 7 7;
+        marker-end: url(#arrow);
+        animation: flow 1.6s linear infinite;
+      }
+      .stem {
+        fill: none;
+        stroke: #a1a1a1;
+        stroke-width: 2;
+        stroke-dasharray: 7 7;
+        animation: flow 1.6s linear infinite;
+      }
+      @keyframes flow {
+        to { stroke-dashoffset: -14; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .arrow, .branch, .stem { animation: none; }
+      }
+    </style>
+  </defs>
+
+  <rect class="box" x="285" y="20" width="350" height="76" rx="8" />
+  <text class="label" x="460" y="50" text-anchor="middle" fill="#f5c211">config</text>
+  <text class="body" x="460" y="75" text-anchor="middle">.env, users.json, seed_movies.json</text>
+
+  <path class="arrow" d="M460 96V130" />
+
+  <rect class="box" x="285" y="138" width="350" height="76" rx="8" />
+  <text class="label" x="460" y="168" text-anchor="middle" fill="#33ff77">seed</text>
+  <text class="body" x="460" y="193" text-anchor="middle">orchestrator, decision tree, user loop</text>
+
+  <path class="stem" d="M460 214V244" />
+  <path class="branch" d="M460 244C460 260 165 252 165 278" />
+  <path class="branch" d="M460 244V278" />
+  <path class="branch" d="M460 244C460 260 755 252 755 278" />
+
+  <rect class="box" x="35" y="286" width="260" height="76" rx="8" />
+  <text class="label" x="165" y="316" text-anchor="middle" fill="#c084fc">client</text>
+  <text class="body" x="165" y="341" text-anchor="middle">Auth, GET, POST</text>
+
+  <path class="arrow" d="M165 362V396" />
+
+  <rect class="box" x="35" y="404" width="260" height="92" rx="8" />
+  <text class="label" x="165" y="434" text-anchor="middle" fill="#fb923c">actions</text>
+  <text class="body" x="165" y="459" text-anchor="middle">watched, favorited,</text>
+  <text class="body" x="165" y="480" text-anchor="middle">watchlisted, review</text>
+
+  <rect class="box" x="330" y="286" width="260" height="108" rx="8" />
+  <text class="label" x="460" y="316" text-anchor="middle" fill="#60a5fa">movie</text>
+  <text class="body" x="460" y="341" text-anchor="middle">pick movie from seed list,</text>
+  <text class="body" x="460" y="362" text-anchor="middle">fetching movie info</text>
+
+  <rect class="box" x="625" y="286" width="260" height="76" rx="8" />
+  <text class="label" x="755" y="316" text-anchor="middle" fill="#f87171">llm</text>
+  <text class="body" x="755" y="341" text-anchor="middle">stream review from Ollama</text>
+
+  <path class="arrow" d="M460 394V535H460V570" />
+
+  <rect class="box" x="285" y="578" width="350" height="76" rx="8" />
+  <text class="label" x="460" y="608" text-anchor="middle" fill="#f0abfc">MovieBoxd API</text>
+</svg>
