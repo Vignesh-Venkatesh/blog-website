@@ -1,0 +1,52 @@
+---
+import PixelSnow from "./PixelSnow";
+---
+
+<div class="relative min-h-screen overflow-hidden bg-bg">
+    <!-- background -->
+    <div
+        class="pointer-events-none fixed inset-0 z-0 opacity-40"
+        aria-hidden="true"
+    >
+        <!-- <PixelSnow client:only="react" /> -->
+        <PixelSnow
+            client:only="react"
+            color="#e7ece8"
+            flakeSize={0.014}
+            minFlakeSize={1}
+            pixelResolution={260}
+            speed={0.6}
+            density={0.15}
+            direction={125}
+            brightness={0.4}
+            depthFade={8}
+            farPlane={20}
+            gamma={0.4}
+            variant="square"
+        />
+    </div>
+
+    <!-- subtle dark overlay -->
+    <div
+        class="pointer-events-none fixed inset-0 z-10 bg-bg/45"
+        aria-hidden="true"
+    ></div>
+
+    <!-- actual 404 -->
+    <main class="relative z-20 mx-auto flex min-h-dvh max-w-2xl items-center justify-center px-6 sm:justify-start">
+        <div class="w-full text-center sm:text-left">
+            <p class="mb-3 font-mono text-sm font-semibold tracking-wide text-accent">
+                404
+            </p>
+
+            <h1 class="font-serif text-4xl font-medium tracking-tight sm:text-5xl">
+                Page not found
+            </h1>
+
+            <p class="mx-auto mt-4 max-w-md font-serif text-lg text-muted sm:mx-0">
+                Whatever you were looking for isn't here. Maybe it moved, maybe
+                it never existed.
+            </p>
+        </div>
+    </main>
+</div>
