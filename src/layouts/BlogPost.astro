@@ -1,0 +1,70 @@
+---
+import type { CollectionEntry } from "astro:content";
+import Divider from "../components/Divider.astro";
+
+interface Props {
+    post: CollectionEntry<"blog">;
+}
+
+const { post } = Astro.props;
+
+const dateTime = post.data.date.toISOString().slice(0, 10);
+const date = post.data.date.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+});
+
+const eyebrow =
+    post.data.category === "technical" ? "technical / project" : "notebook";
+---
+
+<main>
+    <section class="article-masthead">
+        <header class="article-masthead-content mx-auto flex min-h-90 max-w-175 flex-col justify-center px-6 py-12 sm:min-h-105 sm:py-16">
+            <p class="font-mono text-[11px] text-accent">{eyebrow}</p>
+            <h1 class="mt-4 max-w-155 font-serif text-4xl font-medium leading-[1.02] tracking-tight sm:text-5xl lg:text-[3.4rem]">
+                {post.data.title}
+            </h1>
+
+            {post.data.description && (
+                <p class="mt-5 max-w-142.5 font-serif text-lg leading-relaxed text-muted sm:text-xl">
+                    {post.data.description}
+                </p>
+            )}
+
+            <div class="mt-6 flex flex-wrap gap-2 font-mono text-[10px] text-faint sm:text-[11px]">
+                <time datetime={dateTime}>{date}</time>
+            </div>
+
+            {post.data.tags.length > 0 && (
+                <div class="mt-5">
+                    <div class="flex flex-wrap gap-x-3 gap-y-1 font-mono text-[10px] text-faint">
+                        {post.data.tags.map((tag) => (
+                            <a
+                                href={`/archive#${tag}`}
+                                class="transition-colors duration-150 hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                            >
+                                #{tag}
+                            </a>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </header>
+    </section>
+
+    <Divider />
+
+    <article
+        class:list={[
+            "article-prose mx-auto max-w-170 px-6",
+            post.data.category === "notebook"
+                ? "notebook-prose py-14 sm:py-20"
+                : "technical-prose py-12 sm:py-16",
+        ]}
+    >
+        <slot />
+    </article>
+</main>
