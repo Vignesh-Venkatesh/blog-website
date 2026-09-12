@@ -1,0 +1,22 @@
+@import url("https://fonts.googleapis.com/css2?family=Google+Sans+Code:ital,wght,MONO@0,300..800,1;1,300..800,1&family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&display=swap");
+
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #0a0d0b;
+  --color-surface: #111512;
+  --color-foreground: #e7ece8;
+  --color-muted: #8a958d;
+  --color-faint: #59635c;
+  --color-border: #242b26;
+  --color-border-strong: #354038;
+  --color-accent: #b5e853;
+  --color-accent-bright: #7cff6b;
+
+  --font-serif: "Newsreader", Georgia, serif;
+  --font-mono: "Google Sans Code", ui-monospace, monospace;
+}
+
+body {
+  @apply bg-bg text-foreground font-serif;
+}
