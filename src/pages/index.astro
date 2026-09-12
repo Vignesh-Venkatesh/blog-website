@@ -1,21 +1,26 @@
 ---
 import "../styles/global.css";
-import NotFound from "../components/NotFound.astro";
+import Navbar from "../components/Navbar.astro";
+import Divider from "../components/Divider.astro";
+import Intro from "../components/Intro.astro";
 ---
 
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width" />
-        <title>404 — Page not found</title>
-        <script
+        <title>Blog | Vignesh Venkatesh</title>
+        <!-- <script
             defer
             src="https://analytics.vigneshvenkatesh.com/script.js"
             data-website-id="6a7c185e-5995-4caa-acbe-157323558b05"
-        ></script>
+        ></script> -->
     </head>
 
     <body class="bg-bg text-foreground">
-        <NotFound />
+        <Navbar />
+        <Divider />
+        <Intro />
+        <Divider />
     </body>
 </html>
