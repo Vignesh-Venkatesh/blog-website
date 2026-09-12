@@ -1,4 +1,6 @@
 ---
+import { Sun, Moon } from "@lucide/astro";
+
 const path = Astro.url.pathname;
 const links = [
     { href: "/technical", label: "technical" },
@@ -40,6 +42,55 @@ const links = [
                     {link.label}
                 </a>
             ))}
+            <button
+                id="theme-toggle"
+                type="button"
+                aria-label="Switch to light theme"
+                class="-m-2 p-2 text-muted transition-colors hover:text-accent cursor-pointer"
+            >
+                <span id="theme-icon-sun">
+                    <Sun size={14} stroke-width={2} fill="currentColor" />
+                </span>
+
+                <span id="theme-icon-moon" hidden>
+                    <Moon size={14} stroke-width={2} fill="currentColor" />
+                </span>
+            </button>
         </nav>
     </div>
 </header>
+
+<script is:inline>
+    const root = document.documentElement;
+
+    const toggle = document.getElementById("theme-toggle");
+    const sun = document.getElementById("theme-icon-sun");
+    const moon = document.getElementById("theme-icon-moon");
+
+    function updateThemeToggle() {
+        const theme = root.dataset.theme ?? "dark";
+        const isDark = theme === "dark";
+
+        if (sun) sun.hidden = !isDark;
+        if (moon) moon.hidden = isDark;
+
+        toggle?.setAttribute(
+            "aria-label",
+            isDark ? "Switch to light theme" : "Switch to dark theme",
+        );
+    }
+
+    updateThemeToggle();
+
+    toggle?.addEventListener("click", () => {
+        const currentTheme = root.dataset.theme ?? "dark";
+        const nextTheme = currentTheme === "dark" ? "light" : "dark";
+
+        root.dataset.theme = nextTheme;
+        root.style.colorScheme = nextTheme;
+
+        localStorage.setItem("theme", nextTheme);
+
+        updateThemeToggle();
+    });
+</script>

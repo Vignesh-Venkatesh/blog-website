@@ -15,7 +15,16 @@ export default defineConfig({
     react(),
 
     expressiveCode({
-      themes: ["github-dark"],
+      themes: ["github-dark", "github-light"],
+
+      // theme script already handles the user's system preference + saved preference
+      useDarkModeMediaQuery: false,
+
+      // making expressive code respond to:
+      // <html data-theme="dark">
+      // <html data-theme="light">
+      themeCssSelector: (theme) =>
+        `[data-theme="${theme.type}"]`,
 
       frames: {
         showCopyToClipboardButton: true,
