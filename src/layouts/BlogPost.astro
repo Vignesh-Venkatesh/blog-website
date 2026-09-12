@@ -1,6 +1,8 @@
 ---
-import type { CollectionEntry } from "astro:content";
+import { getCollection, type CollectionEntry } from "astro:content";
 import Divider from "../components/Divider.astro";
+import ArticleEnd from "../components/ArticleEnd.astro";
+import readingTime from "reading-time";
 
 interface Props {
     post: CollectionEntry<"blog">;
@@ -16,8 +18,23 @@ const date = post.data.date.toLocaleDateString("en-US", {
     timeZone: "UTC",
 });
 
+const readTime = readingTime(post.body ?? "").text;
+
 const eyebrow =
     post.data.category === "technical" ? "technical / project" : "notebook";
+
+const posts = (
+    await getCollection("blog", ({ data }) => {
+        return import.meta.env.DEV || !data.draft;
+    })
+).sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+const currentIndex = posts.findIndex((entry) => entry.id === post.id);
+const newer = currentIndex > 0 ? posts[currentIndex - 1] : undefined;
+const older =
+    currentIndex >= 0 && currentIndex < posts.length - 1
+        ? posts[currentIndex + 1]
+        : undefined;
 ---
 
 <main>
@@ -36,6 +53,8 @@ const eyebrow =
 
             <div class="mt-6 flex flex-wrap gap-2 font-mono text-[10px] text-faint sm:text-[11px]">
                 <time datetime={dateTime}>{date}</time>
+                <span>·</span>
+                <span>{readTime}</span>
             </div>
 
             {post.data.tags.length > 0 && (
@@ -66,5 +85,7 @@ const eyebrow =
         ]}
     >
         <slot />
+
+        <ArticleEnd date={date} newer={newer} older={older} />
     </article>
 </main>
