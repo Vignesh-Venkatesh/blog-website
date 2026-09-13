@@ -1,0 +1,61 @@
+---
+title: 'wordy: a wc Tool in Go'
+description: "How I built wc, the Linux command line utility, in Go."
+date: 2026-04-18T23:00:00
+category: "technical"
+tags: ["wc", "linux", "go"]
+cover: "/images/wc-tool.webp"
+draft: false
+---
+
+`wc` is one of those Unix tools you use constantly and never think about. This post covers building a clone of it in Go: counting lines, words, and bytes, and the small correctness issues that surface once you actually implement it.
+
+## What wc Does
+
+`wc` counts words, lines, characters, and file size in bytes. I kept this project's scope small and implemented only three flags:
+
+- `-c`: byte count
+- `-w`: word count
+- `-l`: line count
+
+I named the binary `wordy`.
+
+## Setup
+
+The project uses only Go's standard library, deliberately, since the goal was to get comfortable with the language rather than lean on external packages. Three packages did the work:
+
+- `os`: file handling
+- `bufio`: efficient line-by-line reading
+- `strings`: word parsing
+
+## Parsing Arguments
+
+The first step was separating CLI input into two categories: flags (`-l`, `-w`, `-c`) and file names. If no flags are provided, the tool defaults to showing all three counts, matching the behavior of the real `wc`.
+
+## Counting Lines, Words, and Bytes
+
+`bufio.Reader` reads the file line by line, incrementing the line count on each newline. Word counting uses `strings.Fields()`. Byte count comes from `os.Stat().Size()`, a metadata call that returns the file size without reading its contents at all.
+
+### A Word-Counting Bug
+
+My first attempt counted words with `strings.Split(line, " ")`, which breaks in two ways: multiple consecutive spaces produce empty entries, and it ignores tabs and other whitespace entirely. Switching to `strings.Fields(line)` fixed both problems, since it splits on any whitespace and skips empty results automatically.
+
+### A Line-Counting Edge Case
+
+`bufio.Reader.ReadString('\n')` only counts a line once it encounters a newline character. If a file's last line has no trailing `\n`, that line goes uncounted. Worth remembering if you're processing files that don't end cleanly.
+
+## Error Handling
+
+If a given file doesn't exist, the program prints an error for that file and continues processing the rest. This mirrors how most Unix tools behave: a single bad input doesn't take down the whole run.
+
+## Final Thoughts
+
+Small as this project was, it forced me to get comfortable with file I/O in Go and gave me a clearer sense of how CLI tools are typically structured.
+
+## Links
+
+Source code: [Github](https://github.com/Vignesh-Venkatesh/wordy)
+
+## References
+
+1. https://codingchallenges.fyi/challenges/challenge-wc
