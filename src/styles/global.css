@@ -60,12 +60,46 @@ html[data-theme="light"] {
 @keyframes banner-in {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: scale(1.06);
   }
 
   to {
-    opacity: 0.2;
+    opacity: 0.16;
+    transform: scale(1);
+  }
+}
+
+@keyframes article-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes article-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes cover-reveal {
+  from {
+    opacity: 0;
+    filter: blur(3px);
+  }
+
+  to {
+    opacity: 0.16;
+    filter: blur(0);
   }
 }
 
@@ -77,6 +111,48 @@ html[data-theme="light"] {
   to {
     opacity: 0.4;
   }
+}
+
+.article-reveal {
+  opacity: 0;
+  animation: article-reveal 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.article-fade {
+  opacity: 0;
+  animation: article-fade 0.7s ease forwards;
+}
+
+.article-delay-1 {
+  animation-delay: 80ms;
+}
+
+.article-delay-2 {
+  animation-delay: 140ms;
+}
+
+.article-delay-3 {
+  animation-delay: 200ms;
+}
+
+.article-delay-4 {
+  animation-delay: 260ms;
+}
+
+.article-delay-5 {
+  animation-delay: 340ms;
+}
+
+.article-delay-6 {
+  animation-delay: 400ms;
+}
+
+.article-cover {
+  opacity: 0;
+}
+
+.article-cover-loaded {
+  animation: cover-reveal 1s ease-out forwards;
 }
 
 /*global*/
@@ -467,12 +543,28 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .animate-page-in,
-  .animate-snow-in {
+  .animate-snow-in,
+  .animate-banner-in,
+  .article-reveal,
+  .article-fade,
+  .article-cover-loaded {
     animation: none;
   }
 
   .animate-snow-in {
     opacity: 0.4;
+  }
+
+  .article-reveal,
+  .article-fade {
+    opacity: 1;
+    transform: none;
+  }
+
+  .article-cover,
+  .article-cover-loaded {
+    opacity: 0.16;
+    filter: none;
   }
 
   *,
