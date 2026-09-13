@@ -1,21 +1,18 @@
 ---
-import "../styles/global.css";
-import NotFound from "../components/NotFound.astro";
+import { getCollection } from "astro:content";
+
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Intro from "../components/Intro.astro";
+import Divider from "../components/Divider.astro";
+import PostList from "../components/PostList.astro";
+
+const posts = (await getCollection("blog"))
+    .filter((post) => !post.data.draft)
+    .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
 ---
 
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width" />
-        <title>404 — Page not found</title>
-        <script
-            defer
-            src="https://analytics.vigneshvenkatesh.com/script.js"
-            data-website-id="6a7c185e-5995-4caa-acbe-157323558b05"
-        ></script>
-    </head>
-
-    <body class="bg-bg text-foreground">
-        <NotFound />
-    </body>
-</html>
+<BaseLayout title="Blog | Vignesh Venkatesh">
+    <Intro />
+    <Divider />
+    <PostList posts={posts} />
+</BaseLayout>

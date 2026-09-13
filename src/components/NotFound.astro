@@ -5,10 +5,9 @@ import PixelSnow from "./PixelSnow";
 <div class="relative min-h-screen overflow-hidden bg-bg">
     <!-- background -->
     <div
-        class="pointer-events-none fixed inset-0 z-0 opacity-40"
+        class="pointer-events-none fixed inset-0 z-0 opacity-0 animate-snow-in"
         aria-hidden="true"
     >
-        <!-- <PixelSnow client:only="react" /> -->
         <PixelSnow
             client:only="react"
             color="#e7ece8"
@@ -17,7 +16,7 @@ import PixelSnow from "./PixelSnow";
             pixelResolution={260}
             speed={0.6}
             density={0.15}
-            direction={125}
+            direction={115}
             brightness={0.4}
             depthFade={8}
             farPlane={20}
@@ -34,7 +33,7 @@ import PixelSnow from "./PixelSnow";
 
     <!-- actual 404 -->
     <main class="relative z-20 mx-auto flex min-h-dvh max-w-2xl items-center justify-center px-6 sm:justify-start">
-        <div class="w-full text-center sm:text-left">
+        <div class="w-full animate-page-in text-center sm:text-left">
             <p class="mb-3 font-mono text-sm font-semibold tracking-wide text-accent">
                 404
             </p>

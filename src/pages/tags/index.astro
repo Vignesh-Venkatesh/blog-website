@@ -1,0 +1,64 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const posts = (await getCollection("blog")).filter((post) => !post.data.draft);
+
+const tagCounts = new Map<string, number>();
+
+for (const post of posts) {
+    for (const tag of post.data.tags) {
+        tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
+    }
+}
+
+const tags = [...tagCounts.entries()].sort(([a], [b]) => a.localeCompare(b));
+
+const counts = tags.map(([, count]) => count);
+const minCount = Math.min(...counts);
+const maxCount = Math.max(...counts);
+
+const getTagSize = (count: number) => {
+    if (maxCount === minCount) return 1.15;
+
+    const normalized = (count - minCount) / (maxCount - minCount);
+
+    return 0.85 + normalized * 1.15;
+};
+---
+
+<BaseLayout title="Tags | Vignesh Venkatesh">
+    <main class="mx-auto w-full max-w-175 px-6 py-12 sm:py-16">
+        <header class="mb-16">
+            <div class="mb-4 font-mono text-[10px] tracking-[0.12em] text-accent sm:text-[11px]">
+                / tags
+            </div>
+
+            <h1 class="max-w-xl font-serif text-3xl font-medium leading-[1.08] tracking-tight text-foreground sm:text-4xl">
+                Loose threads connecting everything I've written.
+            </h1>
+        </header>
+
+        {tags.length > 0 ? (
+            <div class="flex max-w-2xl flex-wrap items-baseline gap-x-6 gap-y-5">
+                {tags.map(([tag, count]) => (
+                    <a
+                        href={`/tags/${tag}`}
+                        class="group font-serif leading-none text-muted transition-colors duration-150 hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                        style={`font-size: ${getTagSize(count)}rem`}
+                    >
+                        <span>{tag}</span>
+
+                        <sup class="ml-1 font-mono text-[9px] text-faint transition-colors group-hover:text-accent">
+                            {count}
+                        </sup>
+                    </a>
+                ))}
+            </div>
+        ) : (
+            <p class="font-mono text-[10px] text-faint sm:text-[11px]">
+                No tags yet.
+            </p>
+        )}
+    </main>
+</BaseLayout>

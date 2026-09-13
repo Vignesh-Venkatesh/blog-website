@@ -1,0 +1,63 @@
+---
+import "../styles/global.css";
+
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+import Divider from "../components/Divider.astro";
+
+interface Props {
+    title?: string;
+    description?: string;
+    showChrome?: boolean;
+}
+
+const { title = "vignesh.", description = "", showChrome = true } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+    <head>
+        <script is:inline>
+            (() => {
+                const savedTheme = localStorage.getItem("theme");
+
+                const systemTheme = window.matchMedia(
+                    "(prefers-color-scheme: light)",
+                ).matches
+                    ? "light"
+                    : "dark";
+
+                const theme = savedTheme ?? systemTheme;
+
+                document.documentElement.dataset.theme = theme;
+                document.documentElement.style.colorScheme = theme;
+            })();
+        </script>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+        <title>{title}</title>
+
+        {description && <meta name="description" content={description} />}
+    </head>
+
+    <body class="flex min-h-dvh flex-col bg-bg text-foreground">
+        {showChrome ? (
+            <>
+                <Navbar />
+                <Divider />
+
+                <main class="flex-1">
+                    <slot />
+                </main>
+
+                <Divider />
+                <Footer />
+            </>
+        ) : (
+            <main class="flex-1">
+                <slot />
+            </main>
+        )}
+    </body>
+</html>

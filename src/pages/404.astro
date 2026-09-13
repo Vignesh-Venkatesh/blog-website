@@ -1,16 +1,8 @@
 ---
-import "../styles/global.css";
+import BaseLayout from "../layouts/BaseLayout.astro";
 import NotFound from "../components/NotFound.astro";
 ---
 
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width" />
-        <title>[404] Page not found</title>
-    </head>
-
-    <body class="bg-bg text-foreground">
-        <NotFound />
-    </body>
-</html>
+<BaseLayout title="[404] Page not found" showChrome={false}>
+    <NotFound />
+</BaseLayout>

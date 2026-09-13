@@ -1,0 +1,154 @@
+---
+import { getCollection, type CollectionEntry } from "astro:content";
+import Divider from "../components/Divider.astro";
+import ArticleEnd from "../components/ArticleEnd.astro";
+import readingTime from "reading-time";
+
+interface Props {
+    post: CollectionEntry<"blog">;
+}
+
+const { post } = Astro.props;
+
+const dateTime = post.data.date.toISOString().slice(0, 10);
+const date = post.data.date.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+});
+
+const readTime = readingTime(post.body ?? "").text;
+
+const eyebrow =
+    post.data.category === "technical" ? "technical / project" : "notebook";
+
+const posts = (
+    await getCollection("blog", ({ data }) => {
+        return import.meta.env.DEV || !data.draft;
+    })
+).sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+const currentIndex = posts.findIndex((entry) => entry.id === post.id);
+const newer = currentIndex > 0 ? posts[currentIndex - 1] : undefined;
+const older =
+    currentIndex >= 0 && currentIndex < posts.length - 1
+        ? posts[currentIndex + 1]
+        : undefined;
+---
+
+<main>
+    <section
+        class:list={[
+            "article-masthead relative overflow-hidden",
+            post.data.cover && "min-h-90 sm:min-h-105",
+        ]}
+    >
+        {post.data.cover && (
+            <>
+                <img
+                    src={post.data.cover}
+                    alt=""
+                    aria-hidden="true"
+                    class="article-cover pointer-events-none absolute inset-0 h-full w-full scale-[1.3] object-cover object-center select-none sm:scale-100"
+                    loading="eager"
+                    fetchpriority="high"
+                />
+
+                <!-- fade artwork into page background -->
+                <div
+                    aria-hidden="true"
+                    class="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,var(--color-bg)_0%,transparent_28%,transparent_72%,var(--color-bg)_100%)]"
+                />
+
+                <!-- slight vertical fade so artwork doesnt block the text -->
+                <div
+                    aria-hidden="true"
+                    class="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,var(--color-bg)_0%,transparent_55%,transparent_65%,var(--color-bg)_100%)] opacity-40"
+                />
+            </>
+        )}
+
+        <header class="article-masthead-content relative z-10 mx-auto flex min-h-90 max-w-175 flex-col justify-center px-6 py-12 sm:min-h-105 sm:py-16">
+            <p class="article-reveal article-delay-1 font-mono text-[11px] text-accent">
+                {eyebrow}
+            </p>
+
+            <h1 class="article-reveal article-delay-2 mt-4 max-w-155 font-serif text-4xl font-medium leading-[1.02] tracking-tight sm:text-5xl lg:text-[3.4rem]">
+                {post.data.title}
+            </h1>
+
+            {post.data.description && (
+                <p class="article-reveal article-delay-3 mt-5 max-w-142.5 font-serif text-lg leading-relaxed text-muted sm:text-xl">
+                    {post.data.description}
+                </p>
+            )}
+
+            <div class="article-reveal article-delay-4 mt-6 flex flex-wrap gap-2 font-mono text-[10px] text-faint sm:text-[11px]">
+                <time datetime={dateTime}>{date}</time>
+                <span>·</span>
+                <span>{readTime}</span>
+            </div>
+
+            {post.data.tags.length > 0 && (
+                <div class="article-reveal article-delay-4 mt-5">
+                    <div class="flex flex-wrap gap-x-3 gap-y-1 font-mono text-[10px] text-faint">
+                        {post.data.tags.map((tag) => (
+                            <a
+                                href={`/tags/${tag}`}
+                                class="transition-colors duration-150 hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                            >
+                                #{tag}
+                            </a>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </header>
+    </section>
+
+    <div class="article-reveal article-delay-5">
+        <Divider />
+    </div>
+
+    <article
+        class:list={[
+            "article-prose article-reveal article-delay-6 mx-auto max-w-170 px-6",
+            post.data.category === "notebook"
+                ? "notebook-prose py-14 sm:py-20"
+                : "technical-prose py-12 sm:py-16",
+        ]}
+    >
+        <slot />
+
+        <ArticleEnd date={date} newer={newer} older={older} />
+    </article>
+</main>
+
+<script>
+    const cover = document.querySelector<HTMLImageElement>(".article-cover");
+
+    if (cover) {
+        const reveal = async () => {
+            try {
+                await cover.decode();
+            } catch {
+                // the image may already be decoded or decoding may be unsupported
+            }
+
+            cover.classList.add("article-cover-loaded");
+        };
+
+        if (cover.complete && cover.naturalWidth > 0) {
+            void reveal();
+        } else {
+            cover.addEventListener(
+                "load",
+                () => {
+                    void reveal();
+                },
+                { once: true },
+            );
+        }
+    }
+</script>

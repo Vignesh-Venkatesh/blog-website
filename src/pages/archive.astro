@@ -1,0 +1,93 @@
+---
+import { getCollection } from "astro:content";
+
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+const posts = (await getCollection("blog"))
+    .filter((post) => !post.data.draft)
+    .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+const postsByYear = Map.groupBy(posts, (post) => post.data.date.getFullYear());
+
+const formatMonth = (date: Date) =>
+    date
+        .toLocaleDateString("en-US", {
+            month: "short",
+        })
+        .toUpperCase();
+
+const formatDay = (date: Date) => String(date.getDate()).padStart(2, "0");
+---
+
+<BaseLayout title="Archive | Vignesh Venkatesh">
+    <main class="mx-auto w-full max-w-175 px-6 py-12 sm:py-16">
+        <!-- heading -->
+        <header class="mb-16">
+            <div class="mb-4 font-mono text-[10px] tracking-[0.12em] text-accent sm:text-[11px]">
+                / archive
+            </div>
+
+            <h1 class="max-w-xl font-serif text-3xl font-medium leading-tight tracking-tight text-foreground sm:text-4xl">
+                Everything I've published, in reverse chronological order.
+            </h1>
+        </header>
+
+        <!-- archive -->
+        <div class="space-y-14">
+            {[...postsByYear.entries()].map(([year, yearPosts]) => (
+                <section>
+                    <!-- year heading -->
+                    <div class="mb-1 flex items-center justify-between border-b border-border pb-3 font-mono text-[10px] text-faint sm:text-[11px]">
+                        <span>{year}</span>
+                        <span>
+                            {String(yearPosts.length)}{" "}
+                            {yearPosts.length === 1 ? "entry" : "entries"}
+                        </span>
+                    </div>
+
+                    <!-- rows -->
+                    <div>
+                        {yearPosts.map((post, index) => {
+                            const href = `/blog/${post.id}`;
+                            return (
+                                <article class="grid grid-cols-[2rem_3.25rem_minmax(0,1fr)] items-baseline gap-x-3 border-b border-border py-3 sm:grid-cols-[2.25rem_3.5rem_minmax(0,1fr)_auto] sm:gap-x-5">
+                                    <!-- index -->
+                                    <span class="font-mono text-[9px] text-faint sm:text-[10px] text-end">
+                                        {String(yearPosts.length - index)}
+                                    </span>
+
+                                    <!-- date -->
+                                    <time
+                                        datetime={post.data.date.toISOString()}
+                                        class="font-mono text-[9px] text-faint sm:text-[10px]"
+                                    >
+                                        {formatMonth(post.data.date)}{" "}
+                                        {formatDay(post.data.date)}
+                                    </time>
+
+                                    <!-- title -->
+                                    <a
+                                        href={href}
+                                        class="font-serif text-[0.95rem] leading-snug text-foreground transition-colors duration-150 hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent sm:text-base"
+                                    >
+                                        {post.data.title}
+                                    </a>
+
+                                    <!-- category -->
+                                    <a
+                                        href={`/${post.data.category}`}
+                                        class:list={[
+                                            "col-start-3 mt-1 font-mono text-[9px] transition-colors duration-150 hover:text-accent sm:col-start-auto sm:mt-0 sm:text-[10px]",
+                                        ]}
+                                    >
+                                        {post.data.category}
+                                    </a>
+                                </article>
+                            );
+                        })}
+                    </div>
+                </section>
+            ))}
+        </div>
+    </main>
+</BaseLayout>

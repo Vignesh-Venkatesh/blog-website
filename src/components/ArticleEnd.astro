@@ -1,0 +1,64 @@
+---
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+    date: string;
+    newer?: CollectionEntry<"blog">;
+    older?: CollectionEntry<"blog">;
+}
+
+const { date, newer, older } = Astro.props;
+---
+
+<footer class="mt-16 border-t border-border pt-5">
+    <div class="flex flex-col gap-4 font-mono text-[10px] text-faint sm:flex-row sm:items-center sm:justify-between sm:text-[11px]">
+        <a
+            href="/archive"
+            class="article-end-link text-muted transition-colors hover:text-accent"
+        >
+            ← all posts
+        </a>
+        <p>written {date}</p>
+    </div>
+
+    {(older || newer) && (
+        <nav
+            aria-label="Article navigation"
+            class="mt-10 grid gap-6 border-t border-border pt-6 sm:grid-cols-2"
+        >
+            <div>
+                {older && (
+                    <a
+                        href={`/blog/${older.id}`}
+                        class="article-end-link group block"
+                    >
+                        <span class="font-mono text-[9px] uppercase tracking-[0.12em] text-faint">
+                            ← previous
+                        </span>
+
+                        <span class="mt-2 block font-serif text-base text-muted transition-colors group-hover:text-accent">
+                            {older.data.title}
+                        </span>
+                    </a>
+                )}
+            </div>
+
+            <div class="sm:text-right">
+                {newer && (
+                    <a
+                        href={`/blog/${newer.id}`}
+                        class="article-end-link group block"
+                    >
+                        <span class="font-mono text-[9px] uppercase tracking-[0.12em] text-faint">
+                            next →
+                        </span>
+
+                        <span class="mt-2 block font-serif text-base text-muted transition-colors group-hover:text-accent">
+                            {newer.data.title}
+                        </span>
+                    </a>
+                )}
+            </div>
+        </nav>
+    )}
+</footer>
