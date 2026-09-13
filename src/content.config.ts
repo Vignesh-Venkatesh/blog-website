@@ -18,6 +18,7 @@ const blog = defineCollection({
     tags: z.array(z.string()).default([]),
     draft: z.boolean().default(true),
     cover: z.string().optional(),
+    format: z.enum(["project", "paper", "essay", "note", "photo", "poem"]).optional(),
   })
 })
 
