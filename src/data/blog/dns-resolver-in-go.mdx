@@ -1,0 +1,447 @@
+---
+title: "DNS Resolver in Go"
+description: "Building a DNS resolver from scratch in Go using only the standard library, from parsing the wire format to following referrals."
+date: 2026-04-12T23:00:00
+category: "technical"
+tags: ["networking", "dns", "dns-resolver", "go"]
+cover: "/images/dns-resolver-in-go.webp"
+draft: false
+---
+
+DNS resolution felt like magic until I built one myself. This post walks through how: parsing the wire format, following referrals, and handling the edge cases that don't show up until you implement it by hand.
+
+## Why I Built This
+
+About three weeks ago I started learning Go, and instead of the usual CRUD backend, I wanted a project that would force me to understand the language's idiomatic patterns rather than just its syntax. Around the same time I'd been watching a lot of networking content, and DNS resolution stood out. There's a specific moment where you stop taking for granted that a browser knows how to turn `google.com` into something it can actually connect to, and start wondering how.
+
+So I built a DNS resolver using only Go's standard library (`net`, `encoding/binary`). No DNS libraries: parsing and building every byte of the wire format by hand.
+
+## What DNS Actually Is
+
+Think of your phone's contact list. You store names alongside phone numbers, but when you place a call, your phone dials the number, not the name.
+
+DNS works the same way. A domain name is the contact name; a server's IP address is the phone number. Instead of memorizing numbers, we use names, and DNS translates them into IP addresses behind the scenes.
+
+### The Hierarchy
+
+DNS resolution works like a chain of "who do I ask next," structured across three levels:
+
+1. **Root servers**: the starting point. They don't know the answer, but they know where to send you based on the domain's ending (`.com`, `.org`, `.net`).
+2. **TLD (Top Level Domain) servers**: handle a specific ending. When the root server points you here, the TLD server tells you which specific server to ask next.
+3. **Authoritative servers**: the final stop. These hold the actual DNS records for the domain and return the IP address.
+
+In short: the root points you in the right direction, the TLD narrows it down, and the authoritative server gives you the answer.
+
+Here's an example:
+```bash
+Starting resolution for vigneshvenkatesh.com
+Using root server 192.5.5.241 # root server
+
+Querying 192.5.5.241 for vigneshvenkatesh.com
+Received 498 bytes from 192.5.5.241 (67.76ms)
+Answers: 0, Authority: 13, Additional: 11
+
+Following referral to 192.5.6.30 # .com TLD
+
+Querying 192.5.6.30 for vigneshvenkatesh.com
+Received 359 bytes from 192.5.6.30 (103.03ms)
+Answers: 0, Authority: 2, Additional: 12
+
+Following referral to 108.162.194.230 # authoritative server
+
+Querying 108.162.194.230 for vigneshvenkatesh.com
+Received 70 bytes from 108.162.194.230 (14.01ms)
+Answers: 2, Authority: 0, Additional: 0
+
+vigneshvenkatesh.com -> 172.67.175.21 # final answer
+```
+
+## The DNS Wire Format
+
+A resolver doesn't send "give me google.com" as a string. It sends raw bytes in a binary format defined by [RFC 1035](https://datatracker.ietf.org/doc/html/rfc1035#section-4).
+
+Here's a sample DNS query for `google.com`:
+```
+12 34 01 00 00 01 00 00 00 00 00 00
+06 67 6f 6f 67 6c 65 03 63 6f 6d 00
+00 01 00 01
+```
+
+### Header Format
+
+The header is always 12 bytes. This is its structure[^1]:
+```
+                                1  1  1  1  1  1
+  0  1  2  3  4  5  6  7  8  9  0  1  2  3  4  5
++--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+|                      ID                       |
++--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+|QR|   Opcode  |AA|TC|RD|RA|   Z    |   RCODE   |
++--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+|                    QDCOUNT                    |
++--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+|                    ANCOUNT                    |
++--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+|                    NSCOUNT                    |
++--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+|                    ARCOUNT                    |
++--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+```
+
+Breaking down the query bytes:
+  - `12 34` is the ID
+  - `01 00` is the flags field, which in binary is `0000 0001 0000 0000`: a standard query with recursion desired
+  - `00 01` is QDCount (1 question)
+  - `00 00` is ANCount (0 answers, since we're asking, not answering)
+  - `00 00` is NSCount
+  - `00 00` is ARCount
+
+Here's the corresponding Go struct:
+```go
+// message.go
+type Header struct {
+	ID      uint16 // id
+	Flags   uint16 // QR, Opcode, AA, TC, RD, RA, Z, RCODE
+	QDCount uint16 // specifies number of entries in the question section
+	ANCount uint16 // specifies number of resource records in the answer section
+	NSCount uint16 // specifies the number of name server resources records in the authority records section
+	ARCount uint16 // specifies the number of resource records in the additional records section
+}
+```
+
+Every field is big-endian: the most significant byte is stored or read first, followed by the less significant bytes.
+
+### Question Format
+
+Unlike the header, the question section has no fixed length. This is where the query itself is defined[^2]:
+
+```
+                                1  1  1  1  1  1
+  0  1  2  3  4  5  6  7  8  9  0  1  2  3  4  5
++--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+|                                               |
+/                     QNAME                     /
+/                                               /
++--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+|                     QTYPE                     |
++--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+|                     QCLASS                    |
++--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+```
+
+And the Go struct:
+```go
+// message.go
+type Question struct {
+	QName  []byte // domain name (in byte format)
+	QType  uint16 // specifies the type of the query
+	QClass uint16 // specifies the class of the query
+}
+```
+
+### Domain Name Encoding
+
+`google.com` isn't stored as a plain string. It's encoded as a sequence of length-prefixed labels:
+```
+06 67 6f 6f 67 6c 65
+03 63 6f 6d
+00
+```
+- `06 67 6f 6f 67 6c 65`: the first byte (`06`) is the length of the label that follows, and decoding the rest as ASCII spells out "google."
+- `03 63 6f 6d`: same pattern, this time decoding to "com."
+- `00`: the null terminator, marking the end of the name.
+
+Each label is preceded by its length as a single byte, and a null byte ends the name. Here's the Go code that builds this encoding:
+```go
+// builder.go
+domainBytes := []byte{}
+splitString := strings.Split(input.Domain, ".")
+for _, d := range splitString {
+	domainBytes = append(domainBytes, byte(len(d)))
+	domainBytes = append(domainBytes, []byte(d)...)
+}
+domainBytes = append(domainBytes, 0x00) // null terminator
+```
+
+### Resource Format
+
+The resource record format is shared across three sections: answer, authority, and additional. It only appears in responses. Here's the structure[^3]:
+
+```
+                                1  1  1  1  1  1
+  0  1  2  3  4  5  6  7  8  9  0  1  2  3  4  5
++--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+|                                               |
+/                                               /
+/                      NAME                     /
+|                                               |
++--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+|                      TYPE                     |
++--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+|                     CLASS                     |
++--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+|                      TTL                      |
+|                                               |
++--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+|                   RDLENGTH                    |
++--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--|
+/                     RDATA                     /
+/                                               /
++--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+```
+
+Its Go equivalent:
+```go
+// message.go
+// answer, authority and additional sections share the same format
+type Resource struct {
+	Name        []byte // domain name to which this resource record points (in byte format)
+	Type        uint16 // specifies the meaning of the data in the RData field
+	Class       uint16 // specifies the class of the data in the RData field
+	TTL         uint32 // specifies the time interval (in seconds) that the resource record may be cached before it should be discarded
+	RDLength    uint16 // specifies the length of the RData field
+	RData       []byte // describes the resource. varies according to the Type and Class
+	RDataOffset int    // offset of RData in the original message
+}
+```
+
+Here's a sample resource record:
+```
+c0 0c       -> name
+00 01       -> type A
+00 01       -> class IN
+00 00 00 df -> TTL
+00 04       -> RDLength
+8e fb 2d 4e -> RData
+```
+
+- `c0 0c` isn't a domain name at all. It's a compression pointer, covered below.
+- `00 01` marks a Type A record, meaning an IPv4 address.
+- `00 01` marks class IN, meaning internet.
+- `00 00 00 df` is the TTL: 223 seconds.
+- `00 04` is the RDLength: 4 bytes of data follow.
+- `8e fb 2d 4e` is the RData itself. Since the type is A and the class is IN, this decodes to the address `142.251.45.78`.
+
+## Compression Pointers
+
+Encoding domain names as length-prefixed labels gets repetitive fast, especially when the same name appears in multiple sections of a response. Compression pointers solve this: a 2-byte reference to a location elsewhere in the same message where the full domain name already exists.
+
+Take the pointer from the earlier example:
+```
+c0 0c
+```
+The first two bits are always `11`, marking it as a pointer. The remaining 14 bits are an offset into the message.
+
+Breaking it down: `c0 0c` is `11000000 00001100` in binary. The leading `11` is the pointer indicator, and `00000000001100` is the offset `0x00c`, or 12 in decimal. So the instruction is: jump to byte 12 and read the domain name from there.
+
+Looking back at the original query:
+```
+12 34 01 00 00 01 00 00 00 00 00 00  <- first 12 bytes (header)
+06 67 6f 6f 67 6c 65 ...
+```
+Byte 12 is exactly where `google.com` begins.
+
+Here's how I handled this in code:
+```go
+// parser.go
+i := offset
+jumped := false
+var endOffset int 
+for {
+	// ...
+	length := int(data[i])
+	// pointer: 11xxxxxx xxxxxxxx
+	if length&0xC0 == 0xC0 {
+		if i+1 >= len(data) {
+			return nil, 0, fmt.Errorf("truncated pointer")
+		}
+		ptr := int(binary.BigEndian.Uint16(data[i:i+2]) & 0x3FFF)
+		if !jumped {
+			endOffset = i + 2
+		}
+		i = ptr
+		jumped = true
+		continue
+	}
+	// ...
+}
+```
+
+Compression keeps responses smaller and faster to parse, but it introduces a real hazard: circular references. A malicious or malformed message could point to an offset that eventually points back to itself, and a parser that blindly follows pointers would loop forever. I guarded against this by tracking visited offsets and returning an error the moment one repeats:
+
+```go
+// parser.go
+visited := map[int]bool{}
+for {
+	// ...
+	// circular reference protection
+	if visited[i] {
+		return nil, 0, fmt.Errorf("compression loop detected")
+	}
+	visited[i] = true
+	// ...
+}
+```
+
+## The Resolution Loop
+
+This is where everything comes together. The fundamental idea behind DNS resolution is repeatedly asking "who should I ask next." You start at a root server and keep following referrals until you either get an answer or run out of options.
+
+### How the Loop Works
+
+The resolver follows a consistent sequence:
+1. Start with a random root server[^4].
+2. Send a query for the domain.
+3. Parse the response.
+4. Then, depending on what came back: return an A record if present, recursively resolve a CNAME if present, follow glue records if present, or resolve the nameserver itself if nothing else applies.
+
+### The Core Loop
+
+```go
+for {
+		// build query for domain
+		buildQuery := BuildQueryInput{
+			Random: true,
+			Domain: domain,
+		}
+
+		// building the packet
+		packet := BuildQuery(buildQuery)
+
+		// sending it to nameserver over UDP
+		connection, err := net.Dial("udp", nameserver+":53")
+		if err != nil {
+			return nil, err
+		}
+
+		// sending the packet (query)
+		_, err = connection.Write(Serialize(packet))
+		if err != nil {
+			connection.Close()
+			return nil, err
+		}
+
+		// reading the response
+		response := make([]byte, 512)
+		n, err := connection.Read(response)
+		if err != nil {
+			connection.Close()
+			return nil, err
+		}
+
+		// parsing the response packet
+		resp_packet, err := Parse(response[:n])
+		if err != nil {
+			connection.Close()
+			return nil, err
+		}
+		
+		// ...
+```
+At this point the resolver has queried a server and parsed its response. What happens next depends on what that response contained.
+
+#### If We Got an Answer
+
+```go
+// if answers available
+if resp_packet.Header.ANCount > 0 {
+	for _, answer := range resp_packet.Answers {
+		switch answer.Type {
+		// A record
+		case 1:
+			ip := net.IP(answer.RData)
+			connection.Close()
+			return ip, nil
+
+		// CNAME
+		case 5:
+			// parsing the CNAME target from RData
+			cnameLabels, _, err := parseName(response[:n], answer.RDataOffset)
+			if err != nil {
+				connection.Close()
+				return nil, err
+			}
+			cname := LabelsToString(cnameLabels)
+			connection.Close()
+			// recursively resolving the CNAME target
+			return Resolve(ResolverInput{
+				Domain:  cname,
+				Verbose: verbose,
+			})
+		}
+	}
+}
+```
+An A record ends the resolution immediately. A CNAME triggers a recursive call to `Resolve` with the new domain.
+
+#### Following Glue Records
+
+```go
+// if no answers available
+// looping through Additional
+for _, additional := range resp_packet.Additional {
+	if additional.Type == 1 {
+		nameserver = net.IP(additional.RData).String()
+		break
+	}
+}
+```
+When a response includes glue records (IP addresses of nameservers already resolved), the resolver can move on to the next server immediately, with no extra work required.
+
+#### Resolving Nameservers
+
+When no glue records are available, the resolver has to resolve the nameserver's domain first:
+```go
+if !found {
+	// looping through authority
+	for _, authority := range resp_packet.Authority {
+		// NS record
+		if authority.Type == 2 {
+			nsName, _, err := parseName(authority.RData, 0)
+			if err != nil {
+				return nil, fmt.Errorf("could not resolve %s", domain)
+			}
+	
+			// converting label bytes to domain string
+			nsHostname := LabelsToString(nsName)
+	
+			// resolving NS hostname to IP
+			nsIP, err := Resolve(ResolverInput{
+				Domain:  nsHostname,
+				Verbose: verbose,
+			})
+			if err != nil {
+				continue // trying next NS record
+			}
+	
+			nameserver = nsIP.String()
+			found = true
+			break
+		}
+	}
+}
+```
+The resolver pauses and resolves the nameserver itself before continuing. In practice, it first checks glue records in the Additional section, and only falls back to this authority/NS logic if no usable glue record was found there.
+
+## Takeaways
+
+Before this project, I assumed DNS was a simple lookup table sitting somewhere on the internet. Building it showed me a tightly specified binary protocol instead. The most rewarding part was implementing compression pointer resolution: a genuinely clever piece of design that eliminates redundant name storage and shrinks message size. The biggest surprise was how often responses omitted glue records, which meant the resolver had to recursively resolve a nameserver's own domain before it could continue.
+
+Resources I relied on:
+  1. Julia Evans' Blog[^5]
+  2. CodingChallenges.fyi[^6]
+
+## Future Plans
+
+The next addition is likely TTL caching: storing DNS responses locally and reusing them until their Time To Live expires.
+
+## Links
+
+Source code: [Github](https://github.com/Vignesh-Venkatesh/dns-resolver)
+
+[^1]: https://datatracker.ietf.org/doc/html/rfc1035#section-4.1.1
+[^2]: https://datatracker.ietf.org/doc/html/rfc1035#section-4.1.2
+[^3]: https://datatracker.ietf.org/doc/html/rfc1035#section-4.1.3
+[^4]: https://www.iana.org/domains/root/servers
+[^5]: https://jvns.ca/
+[^6]: https://codingchallenges.fyi/challenges/challenge-dns-resolver/

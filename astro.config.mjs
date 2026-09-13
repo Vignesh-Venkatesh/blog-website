@@ -11,6 +11,10 @@ export default defineConfig({
     plugins: [tailwindcss()],
   },
 
+  markdown: {
+      gfm: true,
+  },
+
   integrations: [
     react(),
 
