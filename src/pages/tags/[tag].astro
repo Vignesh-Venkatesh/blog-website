@@ -1,0 +1,130 @@
+---
+import { getCollection } from "astro:content";
+import readingTime from "reading-time";
+
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import TagList from "../../components/TagList.astro";
+
+export async function getStaticPaths() {
+    const posts = (await getCollection("blog")).filter(
+        (post) => !post.data.draft,
+    );
+    const tags = [...new Set(posts.flatMap((post) => post.data.tags))];
+    return tags.map((tag) => ({
+        params: { tag },
+    }));
+}
+
+const tag = Astro.params.tag!;
+
+const posts = (await getCollection("blog"))
+    .filter((post) => !post.data.draft && post.data.tags.includes(tag))
+    .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+const postsByYear = Map.groupBy(posts, (post) => post.data.date.getFullYear());
+
+const formatDate = (date: Date) =>
+    date
+        .toLocaleDateString("en-US", {
+            month: "short",
+            day: "2-digit",
+            year: "numeric",
+        })
+        .toUpperCase();
+---
+
+<BaseLayout title={`#${tag} | Vignesh Venkatesh`}>
+    <main class="mx-auto w-full max-w-175 px-6 py-12 sm:py-16">
+        <header class="mb-16">
+            <div class="mb-4 font-mono text-[10px] tracking-[0.12em] text-accent sm:text-[11px]">
+                / tags / {tag}
+            </div>
+
+            <h1 class="font-serif text-3xl font-medium leading-[1.08] tracking-tight text-foreground sm:text-4xl">
+                #{tag}
+            </h1>
+
+            <p class="mt-4 font-mono text-[9px] text-faint sm:text-[10px]">
+                {posts.length} {posts.length === 1 ? "entry" : "entries"}
+            </p>
+        </header>
+
+        {posts.length > 0 ? (
+            <div class="space-y-14">
+                {[...postsByYear.entries()].map(([year, yearPosts]) => (
+                    <section>
+                        <div class="border-b border-border pb-3 font-mono text-[10px] text-faint sm:text-[11px]">
+                            {year}
+                        </div>
+
+                        <div>
+                            {yearPosts.map((post) => {
+                                const href = `/blog/${post.id}`;
+                                const stats = readingTime(post.body ?? "");
+
+                                return (
+                                    <article class="border-b border-border py-9 sm:py-10">
+                                        <div class="mb-3 flex flex-wrap items-center gap-2 font-mono text-[9px] text-faint sm:text-[10px]">
+                                            <a
+                                                href={`/${post.data.category}`}
+                                                class="transition-colors duration-150 hover:text-accent"
+                                            >
+                                                {post.data.category}
+                                            </a>
+
+                                            <span>·</span>
+
+                                            <time
+                                                datetime={post.data.date.toISOString()}
+                                            >
+                                                {formatDate(post.data.date)}
+                                            </time>
+
+                                            <span>·</span>
+
+                                            <span>{stats.text}</span>
+                                        </div>
+
+                                        <h2 class="font-serif text-2xl font-medium leading-tight tracking-tight sm:text-[1.65rem]">
+                                            <a
+                                                href={href}
+                                                class="text-foreground transition-colors duration-150 hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                                            >
+                                                {post.data.title}
+                                            </a>
+                                        </h2>
+
+                                        <p
+                                            class:list={[
+                                                "mt-3 max-w-2xl font-serif text-base leading-relaxed text-muted sm:text-[1.05rem]",
+                                                post.data.category ===
+                                                    "notebook" && "italic",
+                                            ]}
+                                        >
+                                            {post.data.description}
+                                        </p>
+
+                                        <div class="mt-5 flex flex-wrap items-center justify-between gap-4">
+                                            <TagList tags={post.data.tags} />
+
+                                            <a
+                                                href={href}
+                                                class="font-mono text-[10px] text-faint transition-colors duration-150 hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent sm:text-[11px]"
+                                            >
+                                                read →
+                                            </a>
+                                        </div>
+                                    </article>
+                                );
+                            })}
+                        </div>
+                    </section>
+                ))}
+            </div>
+        ) : (
+            <p class="font-mono text-[10px] text-faint sm:text-[11px]">
+                Nothing filed under this tag yet.
+            </p>
+        )}
+    </main>
+</BaseLayout>
