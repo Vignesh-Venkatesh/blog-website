@@ -22,6 +22,7 @@
 - https://archives.design/
 - https://www.rijksmuseum.nl/en/collection/search?collectionSearchContext=Art&page=2&sortingType=Popularity&view=gallery
 - https://www.metmuseum.org/hubs/open-access
+- https://collectui.com/
 
 - `bunx sharp-cli -i <input.jpg/png> -o <output.webp> -f webp`
 - `ls -lhS`
