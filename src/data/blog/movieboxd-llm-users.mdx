@@ -1,0 +1,208 @@
+---
+title: 'How I Made MovieBoxd Look Alive'
+description: "Populating a resume project with LLM-generated users so it doesn't look like a ghost town."
+date: 2026-04-30T20:44:00
+category: technical
+tags: ["llm", "ollama", "movieboxd", "go", "project"]
+cover: "/images/covers/movieboxd-llm-users.webp"
+draft: false
+---
+import Callout from '../../components/Callout.astro';
+import Figure from '../../components/Figure.astro';
+import MovieBoxdArchitecture from '../../components/diagrams/MovieBoxdArchitecture.astro';
+import movieboxdWithReviews from '../../assets/blog/movieboxd-llm-users/movieboxd-with-reviews.png';
+
+About seven months ago, I published [MovieBoxd](https://movieboxd.vigneshvenkatesh.com), a clone of the movie review platform [Letterboxd](https://letterboxd.com). It has the basics: favoriting, watchlisting, marking movies as watched, writing reviews.
+
+There's a specific kind of deflation that comes from demoing an app with zero users and zero reviews. The UI works, the endpoints respond, it's deployed and live, and it still feels like a ghost town the moment someone actually looks at it. That was MovieBoxd. Since this was built as a resume project meant to be shown to people, I decided it needed populated data, and it needed to look convincing.
+
+## Generating Fake Users
+
+I used an LLM to write the reviews, but not a hosted chatbot. I ran one locally with [Ollama](https://ollama.com/), an open-source tool for running models like Llama, Mistral, and Gemma on your own machine.
+
+Setup took three steps:
+1. `curl -fsSL https://ollama.com/install.sh | sh`
+2. `ollama run gemma4`
+3. Confirm it responds.
+
+Since I was running this on a laptop rather than a server, I stuck to smaller models, `gemma4:e2b` and `lfm2.5-thinking`, to avoid overloading the hardware.
+
+<Callout type="tip">
+
+Ollama doesn't need to run constantly in the background. On Linux, `systemctl stop ollama` stops it, and `systemctl enable ollama` followed by `systemctl start ollama` brings it back.
+
+</Callout>
+
+That covers review generation. The harder problem was everything else: favoriting, watchlisting, and rating movies in a way that looked like real usage rather than a script running in a loop.
+
+## Architecture
+
+<MovieBoxdArchitecture />
+
+The project splits into six packages:
+- **config**: loads `.env`, `users.json`, `seed_movies.json`
+- **client**: an HTTP wrapper handling login and attaching the JWT to every request
+- **movie**: picks a random movie from the seed list and fetches it from the API
+- **actions**: the actual API calls, `/watched`, `/favorited`, `/watchlisted`, `review`
+- **llm**: streams a review from Ollama. Since the official Go package currently 404s, I used `net/http` and `bufio.Scanner` from the standard library to talk to the Ollama endpoint directly.
+- **seed**: the orchestrator wiring everything together
+
+### The Users
+
+Each fake user lives in `users.json`:
+```json
+//users.json
+[
+  {
+    "username": "cinephileatlas",
+    "email": "...",
+    "password": "...",
+    "personality": "cinephileatlas moves through cinema like it’s a living archive they’re constantly expanding, revisiting, and quietly annotating in their head. They are drawn to films that feel intentional in every frame, often balancing arthouse slow burns with mainstream films they can deconstruct and analyze. Watching movies is never passive for them; it is an ongoing internal dialogue between emotion and analysis, where every film becomes part of a larger personal map of meaning and memory."
+  },
+  {
+    "username": "alex_23",
+    "email": "...",
+    "password": "...",
+    "personality": "Casual viewer who logs movies only when friends recommend them. Watches more than they review and usually keeps thoughts short and informal."
+  },
+  ...
+]
+```
+
+The `personality` field is what makes this work. It's fed directly into the Ollama prompt and shapes vocabulary, sentiment, and what the generated review actually notices about a film.
+
+Here's an example, from the user [cinephileatlas](https://movieboxd.vigneshvenkatesh.com/profile/cinephileatlas), reviewing [How to Train Your Dragon](https://movieboxd.vigneshvenkatesh.com/movie/1087192):
+>*The relationship established between Hiccup and Toothless is visually compelling and serves as an effective exploration of challenging established norms. While the emotional payoff is undeniable, the narrative occasionally feels reliant on familiar beats rather than pushing the themes further. It's a perfectly executed piece of cinematic wonder that leaves a lingering sense of thoughtful observation.*
+
+### The Movies
+
+Movies come from `seed_movies.json`, a handpicked list of TMDb IDs:
+```json
+// seed_movies.json
+[
+  { "movie_id": 550, "title": "Fight Club" },
+  { "movie_id": 315635, "title": "Spider-Man: Homecoming" },
+  { "movie_id": 1726, "title": "Iron Man" },
+  { "movie_id": 10138, "title": "Iron Man 2" },
+  { "movie_id": 808, "title": "Shrek" },
+  { "movie_id": 372058, "title": "Your Name." },
+  { "movie_id": 27205, "title": "Inception" },
+  { "movie_id": 1226863, "title": "The Super Mario Galaxy Movie" },
+  { "movie_id": 502356, "title": "The Super Mario Bros. Movie" },
+  { "movie_id": 1318447, "title": "Apex" },
+  { "movie_id": 936075, "title": "Michael" },
+  { "movie_id": 83533, "title": "Avatar: Fire and Ash" },
+  { "movie_id": 687163, "title": "Project Hail Mary" },
+  { "movie_id": 1327819, "title": "Hoppers" },
+  ...
+]
+```
+I'd originally been hitting the `movies/random` endpoint, which kept surfacing films obscure enough that a convincing review wasn't really possible. Curating this list meant every generated review corresponded to something a real person plausibly had an opinion on.
+
+Each ID gets passed to `GET /movies/:id` on the MovieBoxd API, which fetches full movie data from TMDb and caches it in the database. The seeder then pulls `title`, `overview`, `release_date`, and `runtime` from that response and feeds them into the LLM prompt.
+
+## The Decision Tree
+
+This part was the most fun to build. Each iteration runs through a probability tree to decide what a given user does next:
+```
+if already watched -> skip
+
+if already watchlisted:
+    50% -> mark watched + enter watched branch
+    50% -> skip
+
+if fresh:
+    50% -> watched branch
+    50% -> not watched branch
+
+watched branch:
+    60% -> favorite
+    50% -> write review
+        if review:
+            90% -> generate LLM text
+            10% -> rating only
+
+not watched branch:
+    70% -> watchlist
+    30% -> nothing
+```
+
+The percentages themselves are arbitrary, but they produce a realistic looking distribution. Some users end up with dense watch histories and strong opinions, others barely touch anything. The unevenness is what makes it read as real usage rather than uniform seed data.
+
+<Callout type="note">
+    Worth noting: the loop runs sequentially, not concurrently.
+</Callout>
+
+<Callout type="aside">
+Running multiple Ollama instances in parallel was not something my laptop was going to survive.
+</Callout>
+
+## Making It Write Like a Person
+
+The prompt construction does most of the actual work:
+
+```go
+func sentimentFromRating(rating int) string {
+	switch rating {
+	case 1:
+		return "very negative, disappointed"
+	case 2:
+		return "mostly negative, underwhelmed"
+	case 3:
+		return "mixed, neither loved nor hated it"
+	case 4:
+		return "positive, enjoyed it"
+	case 5:
+		return "very positive, loved it"
+	default:
+		return "neutral"
+	}
+}
+
+func buildPrompt(title string, overview string, releaseDate string, personality string, rating int) string {
+	return fmt.Sprintf(
+		`You are a real movieboxd user with this personality: %s
+
+		You just watched "%s" (%s) and gave it %d out of 5 stars.
+		Here is the movie overview: %s
+
+		Write a short, casual movie review (2-4 sentences) that:
+		- Reflects your personality
+		- Matches the sentiment of a %d/5 rating (%s)
+		- Sounds like a real person wrote it, not a critic
+		- Does NOT start with "I"
+		- Does NOT mention the star rating explicitly
+
+		Only output the review text, nothing else.`,
+		personality, title, releaseDate, rating, overview, rating, sentimentFromRating(rating),
+	)
+}
+```
+
+The star rating drives the sentiment: a 1/5 maps to "very negative, disappointed," a 5/5 to "very positive, loved it." Combined with the personality field, the output varies more than a naive template would.
+
+One recurring issue: the model kept leaking its own reasoning into the review text, literal `<think></think>` blocks showing up in the output. I fixed this with a small regex based cleanup function:
+
+```go
+func stripThinking(s string) string {
+    re := regexp.MustCompile(`(?s)<think>.*?</think>`)
+    return strings.TrimSpace(re.ReplaceAllString(s, ""))
+}
+```
+
+## Result
+
+The app now looks used. Watchlists and favorites are populated, and the reviews read like something a person wrote, which is either a win or a small commentary on how much AI written text and human written text have started to sound alike, depending on how you want to take it.
+
+<Figure
+  src={movieboxdWithReviews}
+  alt="MovieBoxd populated with generated user ratings and reviews"
+  caption="MovieBoxd after populating it with generated users and activity."
+  credit="MovieBoxd [2026]"
+/>
+
+Either way, MovieBoxd no longer looks like a ghost town.
+
+## Links
+
+Source code: [Github](https://github.com/Vignesh-Venkatesh/MovieBoxd-LLM-Users)

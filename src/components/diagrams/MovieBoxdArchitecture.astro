@@ -1,0 +1,215 @@
+<figure class="architecture-figure">
+    <svg
+        class="architecture-diagram"
+        viewBox="0 0 760 625"
+        role="img"
+        aria-labelledby="movieboxd-architecture-title movieboxd-architecture-description"
+    >
+        <title id="movieboxd-architecture-title">MovieBoxd seeder architecture</title>
+        <desc id="movieboxd-architecture-description">
+            Configuration feeds the seed orchestrator. Seed coordinates the
+            client, movie, and LLM packages. Client passes requests through
+            actions to the MovieBoxd API.
+        </desc>
+
+        <defs>
+            <marker
+                id="architecture-arrow"
+                viewBox="0 0 10 10"
+                refX="8"
+                refY="5"
+                markerWidth="7"
+                markerHeight="7"
+                orient="auto"
+            >
+                <path d="M0 0 10 5 0 10Z" />
+            </marker>
+        </defs>
+
+        <g class="connections">
+            <path d="M380 92V127" />
+
+            <path class="branch" d="M380 207V240H140" />
+            <path class="branch" d="M380 240H620" />
+            <path d="M140 240V287" />
+            <path d="M380 240V287" />
+            <path d="M620 240V287" />
+
+            <path d="M140 367V407" />
+            <path d="M140 487V532" />
+        </g>
+
+        <g class="node config">
+            <rect x="220" y="22" width="320" height="70" rx="7" />
+            <text class="node-title" x="380" y="50">
+                config
+            </text>
+            <text x="380" y="74">
+                .env · users.json · seed_movies.json
+            </text>
+        </g>
+
+        <g class="node seed">
+            <rect x="220" y="127" width="320" height="80" rx="7" />
+            <text class="node-title" x="380" y="158">
+                seed
+            </text>
+            <text x="380" y="183">
+                orchestrator · decision tree · user loop
+            </text>
+        </g>
+
+        <g class="node client">
+            <rect x="40" y="287" width="200" height="80" rx="7" />
+            <text class="node-title" x="140" y="319">
+                client
+            </text>
+            <text x="140" y="344">
+                authentication · GET · POST
+            </text>
+        </g>
+
+        <g class="node movie">
+            <rect x="280" y="287" width="200" height="80" rx="7" />
+            <text class="node-title" x="380" y="316">
+                movie
+            </text>
+            <text x="380" y="340">
+                pick movie from seed list
+            </text>
+            <text x="380" y="356">
+                fetch movie information
+            </text>
+        </g>
+
+        <g class="node llm">
+            <rect x="520" y="287" width="200" height="80" rx="7" />
+            <text class="node-title" x="620" y="319">
+                llm
+            </text>
+            <text x="620" y="344">
+                stream review from Ollama
+            </text>
+        </g>
+
+        <g class="node actions">
+            <rect x="40" y="407" width="200" height="80" rx="7" />
+            <text class="node-title" x="140" y="436">
+                actions
+            </text>
+            <text x="140" y="460">
+                watched · favorited
+            </text>
+            <text x="140" y="476">
+                watchlisted · review
+            </text>
+        </g>
+
+        <g class="node api">
+            <rect x="40" y="532" width="200" height="70" rx="7" />
+            <text class="node-title" x="140" y="572">
+                MovieBoxd API
+            </text>
+        </g>
+    </svg>
+
+    <figcaption>MovieBoxd seeder package flow</figcaption>
+</figure>
+
+<style>
+    .architecture-figure {
+        margin: 2.25rem 0;
+        overflow-x: auto;
+        border-block: 1px solid var(--color-border);
+        padding: 1rem 0 0.75rem;
+    }
+
+    .architecture-diagram {
+        --diagram-config: #d9ad4a;
+        --diagram-seed: #66bd78;
+        --diagram-client: #ae89d6;
+        --diagram-movie: #64a3db;
+        --diagram-actions: #dd8e55;
+        --diagram-llm: #df7272;
+        --diagram-api: #d47eb5;
+
+        display: block;
+        width: 100%;
+        min-width: 42rem;
+        height: auto;
+        font-family: var(--font-mono);
+    }
+
+    :global(html[data-theme="light"]) .architecture-diagram {
+        --diagram-config: #805600;
+        --diagram-seed: #28743b;
+        --diagram-client: #694091;
+        --diagram-movie: #176394;
+        --diagram-actions: #91440f;
+        --diagram-llm: #9b3030;
+        --diagram-api: #92356f;
+    }
+
+    .connections {
+        fill: none;
+        stroke: var(--color-border-strong);
+        stroke-width: 1.5;
+        marker-end: url(#architecture-arrow);
+    }
+
+    .connections .branch {
+        marker-end: none;
+    }
+
+    #architecture-arrow path {
+        fill: var(--color-border-strong);
+    }
+
+    .node rect {
+        fill: var(--color-surface);
+        stroke: var(--color-border-strong);
+        stroke-width: 1;
+    }
+
+    .node text {
+        fill: var(--color-muted);
+        font-size: 11px;
+        text-anchor: middle;
+    }
+
+    .node-title {
+        font-size: 14px !important;
+        font-weight: 700;
+    }
+
+    .config .node-title {
+        fill: var(--diagram-config);
+    }
+    .seed .node-title {
+        fill: var(--diagram-seed);
+    }
+    .client .node-title {
+        fill: var(--diagram-client);
+    }
+    .movie .node-title {
+        fill: var(--diagram-movie);
+    }
+    .actions .node-title {
+        fill: var(--diagram-actions);
+    }
+    .llm .node-title {
+        fill: var(--diagram-llm);
+    }
+    .api .node-title {
+        fill: var(--diagram-api);
+    }
+
+    figcaption {
+        color: var(--color-faint);
+        font-family: var(--font-mono);
+        font-size: 0.6rem;
+        letter-spacing: 0.08em;
+        text-align: right;
+        text-transform: uppercase;
+    }
+</style>

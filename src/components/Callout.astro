@@ -1,0 +1,59 @@
+---
+import {
+    BadgeAlert,
+    CircleAlert,
+    CircleCheck,
+    CircleQuestionMark,
+    FlaskConical,
+    Info,
+    Lightbulb,
+    MessageSquareQuote,
+    Quote,
+    StickyNote,
+    TriangleAlert,
+} from "@lucide/astro";
+
+type CalloutType =
+    | "note"
+    | "tip"
+    | "info"
+    | "warning"
+    | "danger"
+    | "aside"
+    | "success"
+    | "question"
+    | "example"
+    | "important"
+    | "quote";
+
+interface Props {
+    type?: CalloutType;
+}
+
+const { type = "note" } = Astro.props;
+const icons = {
+    note: StickyNote,
+    tip: Lightbulb,
+    info: Info,
+    warning: TriangleAlert,
+    danger: CircleAlert,
+    aside: MessageSquareQuote,
+    success: CircleCheck,
+    question: CircleQuestionMark,
+    example: FlaskConical,
+    important: BadgeAlert,
+    quote: Quote,
+};
+const Icon = icons[type];
+---
+
+<aside class="article-callout" data-callout-type={type}>
+    <div class="article-callout-label font-semibold">
+        <Icon size={14} stroke-width={2} aria-hidden="true" />
+        <span>{type}</span>
+    </div>
+
+    <div class="article-callout-content">
+        <slot />
+    </div>
+</aside>

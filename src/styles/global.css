@@ -344,27 +344,83 @@ body {
   font-size: 0.6em;
 }
 
-/*notes*/
+/*callouts*/
 
-.article-note {
+.article-callout {
+  --callout-color: var(--color-border-strong);
   margin-top: 2.3rem;
-  border-left: 1px solid var(--color-border-strong);
+  border-left: 2px solid var(--callout-color);
   padding: 0.2rem 0 0.2rem 1.1rem;
 }
 
-.article-note-label,
+.article-callout[data-callout-type="tip"] {
+  --callout-color: #55b86a;
+}
+
+.article-callout[data-callout-type="info"] {
+  --callout-color: #579bd7;
+}
+
+.article-callout[data-callout-type="warning"] {
+  --callout-color: #d5a33e;
+}
+
+.article-callout[data-callout-type="danger"] {
+  --callout-color: #dc6262;
+}
+
+.article-callout[data-callout-type="aside"] {
+  --callout-color: #a982d4;
+}
+
+.article-callout[data-callout-type="success"] {
+  --callout-color: #3ebd93;
+}
+
+.article-callout[data-callout-type="question"] {
+  --callout-color: #43b8ca;
+}
+
+.article-callout[data-callout-type="example"] {
+  --callout-color: #7c8ee8;
+}
+
+.article-callout[data-callout-type="important"] {
+  --callout-color: #dc6fa3;
+}
+
+.article-callout[data-callout-type="quote"] {
+  --callout-color: #8f9a92;
+}
+
+.article-callout-label,
 .paper-metadata dt {
   font-family: var(--font-mono);
   font-size: 0.6rem;
   letter-spacing: 0.12em;
+}
+
+.article-callout-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--callout-color);
+  text-transform: uppercase;
+}
+
+.article-callout-label svg {
+  flex: none;
+}
+
+.paper-metadata dt {
   color: var(--color-accent);
 }
 
-.article-note-content {
+.article-callout-content {
   color: var(--color-muted);
 }
 
-.article-note-content > * {
+.article-callout-content > * {
   margin-top: 0.45rem;
 }
 
@@ -470,8 +526,9 @@ body {
 .photo-figure img {
   display: block;
   width: 100%;
+  height: auto;
   max-height: min(72vh, 780px);
-  object-fit: cover;
+  object-fit: contain;
   border: 1px solid var(--color-border);
   background: var(--color-surface);
 }
@@ -508,6 +565,11 @@ body {
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 0.2rem 1rem;
+}
+
+.photo-figure .figure-credit {
+  margin-left: auto;
+  text-align: right;
 }
 
 /*currently*/
