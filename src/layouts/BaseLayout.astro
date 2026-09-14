@@ -39,6 +39,13 @@ const { title = "vignesh.", description = "", showChrome = true } = Astro.props;
         <title>{title}</title>
 
         {description && <meta name="description" content={description} />}
+
+        <script
+            is:inline
+            defer
+            src="https://analytics.vigneshvenkatesh.com/script.js"
+            data-website-id="6a7c185e-5995-4caa-acbe-157323558b05"
+        ></script>
     </head>
 
     <body class="flex min-h-dvh flex-col bg-bg text-foreground">

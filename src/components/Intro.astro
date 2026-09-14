@@ -4,8 +4,9 @@
         src="/images/site/creation.svg"
         alt=""
         aria-hidden="true"
-        class="pointer-events-none absolute inset-0 h-full w-full scale-[1.3] object-cover object-center select-none opacity-[0.2] sm:scale-100 animate-banner-in"
-        loading="lazy"
+        class="home-cover article-cover pointer-events-none absolute inset-0 h-full w-full scale-[1.3] object-cover object-center select-none sm:scale-100"
+        loading="eager"
+        fetchpriority="high"
     />
 
     <!-- fading both edges -->
@@ -16,12 +17,12 @@
 
     <div class="relative z-10 mx-auto flex min-h-80 max-w-175 items-center px-6 sm:min-h-0 sm:py-24">
         <div class="max-w-xl">
-            <h1 class="font-serif text-[2.4rem] leading-[1.08] tracking-tight text-foreground">
+            <h1 class="page-reveal page-delay-1 font-serif text-[2.4rem] leading-[1.08] tracking-tight text-foreground">
                 Jotting down notes on systems, software, projects, and anything
                 else worth writing.
             </h1>
 
-            <div class="mt-8 flex gap-6 font-mono text-[12px] text-muted font-semibold">
+            <div class="page-reveal page-delay-2 mt-8 flex gap-6 font-mono text-[12px] text-muted font-semibold">
                 <a href="/technical" class="hover:text-accent">
                     / technical
                 </a>
@@ -37,3 +38,31 @@
         </div>
     </div>
 </section>
+
+<script>
+    const cover = document.querySelector<HTMLImageElement>(".home-cover");
+
+    if (cover) {
+        const reveal = async () => {
+            try {
+                await cover.decode();
+            } catch {
+                // the image may already be decoded or decoding may be unsupported
+            }
+
+            cover.classList.add("article-cover-loaded");
+        };
+
+        if (cover.complete && cover.naturalWidth > 0) {
+            void reveal();
+        } else {
+            cover.addEventListener(
+                "load",
+                () => {
+                    void reveal();
+                },
+                { once: true },
+            );
+        }
+    }
+</script>

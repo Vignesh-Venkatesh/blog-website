@@ -13,6 +13,8 @@ const posts = (await getCollection("blog"))
 
 <BaseLayout title="Blog | Vignesh Venkatesh">
     <Intro />
-    <Divider />
+    <div class="page-reveal page-delay-3">
+        <Divider />
+    </div>
     <PostList posts={posts} />
 </BaseLayout>

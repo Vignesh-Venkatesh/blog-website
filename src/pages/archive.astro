@@ -23,19 +23,22 @@ const formatDay = (date: Date) => String(date.getDate()).padStart(2, "0");
     <main class="mx-auto w-full max-w-175 px-6 py-12 sm:py-16">
         <!-- heading -->
         <header class="mb-16">
-            <div class="mb-4 font-mono text-[10px] tracking-[0.12em] text-accent sm:text-[11px]">
+            <div class="page-reveal page-delay-1 mb-4 font-mono text-[10px] tracking-[0.12em] text-accent sm:text-[11px]">
                 / archive
             </div>
 
-            <h1 class="max-w-xl font-serif text-3xl font-medium leading-tight tracking-tight text-foreground sm:text-4xl">
+            <h1 class="page-reveal page-delay-2 max-w-xl font-serif text-3xl font-medium leading-tight tracking-tight text-foreground sm:text-4xl">
                 Everything I've published, in reverse chronological order.
             </h1>
         </header>
 
         <!-- archive -->
         <div class="space-y-14">
-            {[...postsByYear.entries()].map(([year, yearPosts]) => (
-                <section>
+            {[...postsByYear.entries()].map(([year, yearPosts], index) => (
+                <section
+                    class="page-reveal"
+                    style={`animation-delay: ${440 + Math.min(index, 3) * 90}ms`}
+                >
                     <!-- year heading -->
                     <div class="mb-1 flex items-center justify-between border-b border-border pb-3 font-mono text-[10px] text-faint sm:text-[11px]">
                         <span>{year}</span>

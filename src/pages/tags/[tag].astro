@@ -36,23 +36,26 @@ const formatDate = (date: Date) =>
 <BaseLayout title={`#${tag} | Vignesh Venkatesh`}>
     <main class="mx-auto w-full max-w-175 px-6 py-12 sm:py-16">
         <header class="mb-16">
-            <div class="mb-4 font-mono text-[10px] tracking-[0.12em] text-accent sm:text-[11px]">
+            <div class="page-reveal page-delay-1 mb-4 font-mono text-[10px] tracking-[0.12em] text-accent sm:text-[11px]">
                 / tags / {tag}
             </div>
 
-            <h1 class="font-serif text-3xl font-medium leading-[1.08] tracking-tight text-foreground sm:text-4xl">
+            <h1 class="page-reveal page-delay-2 font-serif text-3xl font-medium leading-[1.08] tracking-tight text-foreground sm:text-4xl">
                 #{tag}
             </h1>
 
-            <p class="mt-4 font-mono text-[9px] text-faint sm:text-[10px]">
+            <p class="page-reveal page-delay-3 mt-4 font-mono text-[9px] text-faint sm:text-[10px]">
                 {posts.length} {posts.length === 1 ? "entry" : "entries"}
             </p>
         </header>
 
         {posts.length > 0 ? (
             <div class="space-y-14">
-                {[...postsByYear.entries()].map(([year, yearPosts]) => (
-                    <section>
+                {[...postsByYear.entries()].map(([year, yearPosts], index) => (
+                    <section
+                        class="page-reveal"
+                        style={`animation-delay: ${440 + Math.min(index, 3) * 90}ms`}
+                    >
                         <div class="border-b border-border pb-3 font-mono text-[10px] text-faint sm:text-[11px]">
                             {year}
                         </div>
@@ -122,7 +125,7 @@ const formatDate = (date: Date) =>
                 ))}
             </div>
         ) : (
-            <p class="font-mono text-[10px] text-faint sm:text-[11px]">
+            <p class="page-reveal page-delay-4 font-mono text-[10px] text-faint sm:text-[11px]">
                 Nothing filed under this tag yet.
             </p>
         )}
