@@ -22,8 +22,7 @@ const defaultCode = `void mainImage(out vec4 fragColor, in vec2 fragCoord)
   vec2 uv = fragCoord / iResolution.xy;
 
   fragColor = vec4(uv, 0.0, 1.0);
-}
-`
+}`
 
 function buildFragmentShader(userCode: string){
   return `#version 300 es
@@ -60,7 +59,38 @@ function compileShader(gl: WebGL2RenderingContext, type: number, source: string)
 }
 
 
+const editorTheme = EditorView.theme({
+  "&": {
+    backgroundColor: "var(--color-surface)",
+    color: "var(--color-foreground)",
+    fontSize: "0.8rem",
+  },
 
+  ".cm-scroller": {
+    fontFamily: "var(--font-mono)",
+    lineHeight: "1.7",
+  },
+
+  ".cm-content": {
+    padding: "0",
+    caretColor: "var(--color-accent)",
+  },
+
+  ".cm-line": {
+    paddingLeft: "1rem",
+    paddingRight: "1rem",
+  },
+
+  ".cm-gutters": {
+    backgroundColor: "var(--color-surface)",
+    color: "var(--color-faint)",
+    borderRight: "1px solid var(--color-border)",
+  },
+
+  "&.cm-focused": {
+    outline: "none",
+  },
+})
 
 export default function ShaderPlayground({aspectWidth = 16, aspectHeight=9, initialCode=defaultCode}: ShaderPlaygroundProps) {
   const validAspectRatio = aspectWidth > aspectHeight && aspectHeight > 0 ? `${aspectWidth}/${aspectHeight}` : "16/9"
@@ -235,7 +265,10 @@ export default function ShaderPlayground({aspectWidth = 16, aspectHeight=9, init
 
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
       const err = gl.getProgramInfoLog(program)
-      throw new Error(err ?? "shader program linking failed")
+      gl.deleteShader(fragmentShader)
+      gl.deleteProgram(program)
+      setError(err ?? "shader program linking failed")
+      return
     }
 
     gl.detachShader(program, fragmentShader)
@@ -265,74 +298,52 @@ export default function ShaderPlayground({aspectWidth = 16, aspectHeight=9, init
   }, [code])
 
 
-  const editorTheme = EditorView.theme({
-    "&": {
-      backgroundColor: "var(--color-surface)",
-      color: "var(--color-foreground)",
-      fontSize: "0.8rem",
-    },
 
-    ".cm-scroller": {
-      fontFamily: "var(--font-mono)",
-      lineHeight: "1.7",
-    },
-
-    ".cm-content": {
-      padding: "0",
-      caretColor: "var(--color-accent)",
-    },
-
-    ".cm-line": {
-      paddingLeft: "1rem",
-      paddingRight: "1rem",
-    },
-
-    ".cm-gutters": {
-      backgroundColor: "var(--color-surface)",
-      color: "var(--color-faint)",
-      borderRight: "1px solid var(--color-border)",
-    },
-
-    "&.cm-focused": {
-      outline: "none",
-    },
-  })
 
   return (
     <div className="my-6 overflow-hidden rounded-lg border-border bg-surface">
-      <div className="relative w-full bg-black" style={{aspectRatio: validAspectRatio}}>
+      <div className="relative w-full bg-black" style={{ aspectRatio: validAspectRatio }}>
+        <div className="pointer-events-none absolute top-0 left-0 z-10 px-3 py-2 font-mono text-xs text-white/50 uppercase">
+          OUTPUT
+        </div>
         <canvas className="absolute inset-0 block h-full w-full" ref={canvasRef}/>
       </div>
 
       <div className="border-t border-border bg-surface">
-        <div className="flex items-center justify-between border-b border-border px-3 py-2 text-border-strong">
-          <span className="font-mono text-xs uppercase">
+        <div className="flex items-center justify-between border-b border-border px-3 py-2 uppercase">
+          <span className="font-mono text-xs text-muted">
             fragment shader
           </span>
 
-          <button type="button" onClick={resetCode} className="font-mono text-xs cursor-pointer uppercase">
+          <button
+            type="button"
+            onClick={resetCode}
+            className="cursor-pointer font-mono text-xs text-muted transition-colors hover:text-foreground uppercase"
+          >
             reset
           </button>
         </div>
 
-        <CodeMirror
-          value={code}
-          extensions={[cpp(), editorTheme, EditorView.lineWrapping]}
-          onChange={(value) => setCode(value)}
-          theme={isDark ? githubDark : githubLight}
-          basicSetup={{
-            lineNumbers: true,
-            highlightActiveLine: true,
-            highlightActiveLineGutter: true,
-            foldGutter: false,
-            autocompletion: false,
-            bracketMatching: true,
-            closeBrackets: true,
-            indentOnInput: true,
-            syntaxHighlighting: true,
-            highlightSelectionMatches: false,
-          }}
-        />
+        <div className="overflow-hidden">
+          <CodeMirror
+            value={code}
+            extensions={[cpp(), editorTheme, EditorView.lineWrapping]}
+            onChange={(value) => setCode(value)}
+            theme={isDark ? githubDark : githubLight}
+            basicSetup={{
+              lineNumbers: true,
+              highlightActiveLine: true,
+              highlightActiveLineGutter: true,
+              foldGutter: false,
+              autocompletion: false,
+              bracketMatching: true,
+              closeBrackets: true,
+              indentOnInput: true,
+              syntaxHighlighting: true,
+              highlightSelectionMatches: false,
+            }}
+          />
+        </div>
 
         {error && (
           <div className="border-t border-border bg-red-500/5">
