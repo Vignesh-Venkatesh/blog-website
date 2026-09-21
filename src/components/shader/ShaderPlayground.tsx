@@ -30,6 +30,7 @@ function buildFragmentShader(userCode: string){
 
 precision mediump float;
 uniform vec2 iResolution;
+uniform float iTime;
 out vec4 fragColor;
 
 ${userCode}
@@ -71,6 +72,11 @@ export default function ShaderPlayground({aspectWidth = 16, aspectHeight=9, init
   const bufferRef = useRef<WebGLBuffer | null>(null)
   const programRef = useRef<WebGLProgram | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const animationFrameRef = useRef<number | null>(null)
+  const startTimeRef = useRef(0)
+  const resolutionLocationRef = useRef<WebGLUniformLocation | null>(null)
+  const timeLocationRef = useRef<WebGLUniformLocation | null>(null)
+  const visibleRef = useRef(true)
 
   function resetCode() {
     setCode(initialCode);
@@ -128,22 +134,92 @@ export default function ShaderPlayground({aspectWidth = 16, aspectHeight=9, init
     gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW)
 
     bufferRef.current = buffer
+
+    const observer = new IntersectionObserver(([entry]) => {
+      visibleRef.current = entry.isIntersecting
+    })
+
+    observer.observe(canvas)
+
+    const canvasElement = canvas
+
+    startTimeRef.current = performance.now()
+
+    function resizecanvas() {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2)
+      const width = Math.max(1, Math.floor(canvasElement.clientWidth * dpr))
+      const height = Math.max(1, Math.floor(canvasElement.clientHeight * dpr))
+
+      if (canvasElement.width !== width || canvasElement.height !== height) {
+        canvasElement.width = width
+        canvasElement.height = height
+      }
+    }
+
+    function render(now: number) {
+      if (!visibleRef.current) {
+        animationFrameRef.current = requestAnimationFrame(render)
+        return
+      }
+
+      const program = programRef.current
+      const resolutionLocation = resolutionLocationRef.current
+      const timeLocation = timeLocationRef.current
+
+      if (program) {
+        resizecanvas()
+
+        const elapsed = (now - startTimeRef.current) / 1000
+
+        gl?.useProgram(program)
+        gl?.uniform2f(resolutionLocation, canvasElement.width, canvasElement.height)
+        gl?.uniform1f(timeLocation, elapsed)
+
+        gl?.viewport(0, 0, canvasElement.width, canvasElement.height)
+
+        gl?.drawArrays(gl.TRIANGLES, 0, 3)
+      }
+
+      animationFrameRef.current = requestAnimationFrame(render)
+    }
+
+    animationFrameRef.current = requestAnimationFrame(render)
+
+    return () => {
+      observer.disconnect()
+
+      if (animationFrameRef.current !== null) {
+        cancelAnimationFrame(animationFrameRef.current)
+      }
+      if (programRef.current) {
+        gl.deleteProgram(programRef.current)
+      }
+
+      if (bufferRef.current) {
+        gl.deleteBuffer(bufferRef.current)
+      }
+
+      if (vertexShaderRef.current) {
+        gl.deleteShader(vertexShaderRef.current)
+      }
+    }
   },[])
 
   useEffect(() => {
-    const canvas = canvasRef.current
     const gl = glRef.current
     const vertexShader = vertexShaderRef.current
     const buffer = bufferRef.current
 
-    if (!canvas || !gl || !vertexShader || !buffer) {
+    if (!gl || !vertexShader || !buffer) {
       return
     }
+
     const fragmentResult = compileShader(gl, gl.FRAGMENT_SHADER, buildFragmentShader(code))
     if (!fragmentResult.shader) {
       setError(fragmentResult.error)
       return
     }
+
     const fragmentShader = fragmentResult.shader
     setError(null)
 
@@ -168,7 +244,6 @@ export default function ShaderPlayground({aspectWidth = 16, aspectHeight=9, init
     const previousProgram = programRef.current
     programRef.current = program
 
-
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
 
     const positionLocation = gl.getAttribLocation(program, "aPosition")
@@ -182,11 +257,10 @@ export default function ShaderPlayground({aspectWidth = 16, aspectHeight=9, init
     }
 
     const resolutionLocation = gl.getUniformLocation(program, "iResolution")
-    gl.uniform2f(resolutionLocation, canvas.width, canvas.height)
+    const timeLocation = gl.getUniformLocation(program, "iTime")
 
-    gl.viewport(0, 0, canvas.width, canvas.height)
-
-    gl.drawArrays(gl.TRIANGLES, 0, 3)
+    resolutionLocationRef.current = resolutionLocation
+    timeLocationRef.current = timeLocation
 
   }, [code])
 
