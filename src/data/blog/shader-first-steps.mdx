@@ -1,0 +1,406 @@
+---
+title: "First Baby Steps in GLSL Shaders"
+description: "Learning how fragment shaders turn coordinates and math into cool visuals."
+date: 2026-09-22T00:43:00
+category: "technical"
+cover: "/images/covers/shader-first-steps.webp"
+tags: ["shaders", "glsl", "graphics-programming"]
+draft: false
+---
+
+import Callout from '../../components/Callout.astro';
+import ShaderPlayground from "../../components/shader/ShaderPlayground";
+
+<Callout type="warning">
+    <div className="font-mono text-sm">
+        This post contains live WebGL2 shader playgrounds. Your browser compiles and runs the shaders locally, so yes, your GPU might wake up.
+    </div>
+</Callout>
+
+It's been about five months since my last post, and if you've been here before, you've probably noticed that the blog looks completely different now. I got a little obsessed with editorial style web design and decided to revamp the whole blog. But that's not what this post is about.
+
+This semester I've been taking a graphics programming course, and it's sent me down a bit of a rabbit hole. Graphics programming is very math heavy, and usually, the slightest mention of math would make me run in the opposite direction. Somehow, though, it feels different here. I think the reason is that the math actually turns into something I can see. Changing equations result in moving shapes, or changing gradients, etc. It is a very satisfying feeling.
+
+Lately I've been playing around with **`GLSL`** fragment shaders, mostly through [Shadertoy](https://www.shadertoy.com/), and a few ideas have finally started clicking.
+
+This post isn't meant to be a complete introduction to GLSL, but rather, is a record of the mental model that got me from *"What even is a `fragCoord`?"* to actually drawing and animating my first procedural shapes.
+
+
+## What is a fragment shader, actually?
+
+A fragment shader basically asks, *"given this position, what color should I output?"*
+
+For a simple fullscreen shader, that would be:
+```
+position -> color
+```
+
+The GPU runs that calculation for a huge number of fragments in parallel. Each invocation only worries about its own position, and once all those answers are put together, you get the final image.
+
+This also explains why shader code can feel *(or at least for me)* a little counterintuitive at first. You're not creating a circle object and asking the GPU to draw it, but rather, for every position on the screen you're asking how far this point is from the center, whether it's inside the circle or outside it, whether it's close to the edge, and then picking a color based on the answer.
+
+<Callout type="note">
+    <div className="font-mono text-sm">
+        You may also hear fragment shaders being called "pixel shaders", especially in DirectX terminology. They're closely related terms, although OpenGL/GLSL specifically calls this stage the fragment shader.
+    </div>
+</Callout>
+
+
+## A quick note about Shadertoy
+
+The playgrounds in this post run on WebGL2, but I'm using a Shadertoy style interface for the examples, which matters because things like `mainImage`, `iResolution`, and `iTime` are not GLSL keywords, but rather are part of the interface that Shadertoy provides for you. 
+
+A normal GLSL fragment shader's entry point is just `void main()`. Shadertoy instead asks you to write `void mainImage(out vec4 fragColor, in vec2 fragCoord)` and hands you some useful values like screen resolution and elapsed time. 
+
+My shader playground does something similar so I can focus on the shader itself instead of dumping a ton of WebGL boilerplate into every example.
+
+Since it's a playground, feel free to rewrite some of the examples and have fun 🙃.
+
+## Where everything starts: `fragCoord`
+
+Let's start with this:
+
+<ShaderPlayground
+  client:visible
+  initialCode={`void mainImage(out vec4 fragColor, in vec2 fragCoord){
+    float x = fragCoord.x;
+    float y = fragCoord.y;
+
+    fragColor = vec4(x, y, 0.0, 1.0);
+}`}
+/>
+
+`fragCoord` is the position of the fragment we are currently shading. It is a `vec2`, meaning two floating point numbers, `fragCoord.x` for horizontal position and `fragCoord.y` for vertical.
+
+So on a `640 x 360` canvas, a fragment near the middle might sit somewhere around `(320, 180)`.
+
+Then:
+
+```glsl
+fragColor = vec4(x, y, 0.0, 1.0);
+```
+
+A `vec4` holds four numbers, and for colors we treat them as `vec4(red, green, blue, alpha)`. 
+
+So this is basically saying: `red = x, green = y, blue = 0, alpha = 1`
+
+However, there's a problem. Displayed color values are expected to be between `0.0` and `1.0`, but `x` and `y` can be numbers like `320` or `500`. GLSL has no issue storing numbers bigger than `1.0`, but once those values land in a color buffer, anything above the max just reads as fully bright. 
+
+Hence, in our case, most of the image ends up being full red and full green, and the combination of the two gives us yellow.
+
+What we want instead is a way to shrink our pixel coordinates down into much smaller numbers.
+
+## Normalizing the coordinates
+
+Instead of `0 -> 640` and `0 -> 360`, it would be a lot nicer if both axes just went `0 -> 1`. We can get there by dividing each coordinate by the size of the screen.
+
+<ShaderPlayground
+  client:visible
+  initialCode={`void mainImage(out vec4 fragColor, in vec2 fragCoord){
+    float x = fragCoord.x;
+    float y = fragCoord.y;
+
+    x = x / iResolution.x;
+    y = y / iResolution.y;
+
+    fragColor = vec4(x, y, 0.0, 1.0);
+}`}
+/>
+
+`iResolution` is a uniform Shadertoy provides. It is an input sent into the shader by whatever's running it. Unlike `fragCoord`, which changes per fragment, a uniform stays the same across the whole draw. Shadertoy gives us the viewport size through it, so `iResolution.x` is the width and `iResolution.y` is the height.
+
+We can write the normalization more cleanly with vectors:
+
+```glsl
+vec2 uv = fragCoord / iResolution.xy;
+```
+
+GLSL has vector types built into the language. `vec2` for two numbers, `vec3` for three, `vec4` for four. `.xy` here is called *swizzling*, which just lets you pull multiple components out of a vector at once. So `iResolution.xy` gives us the width and height as a `vec2`.
+
+After dividing, our coordinates look like this:
+
+```text
+bottom-left = (0, 0)
+center = (0.5, 0.5)
+top-right = (1, 1)
+```
+
+These normalized coordinates are commonly stored in a variable called `uv`. Technically UV coordinates are usually associated with textures, but you'll see `uv` quite commonly used in shader code for normalized 2D coordinates like this too.
+
+Now the colors make sense. Red goes `0 -> 1` along the x-axis, green goes `0 -> 1` along the y-axis, and toward the top-right corner both are `1`, which gives yellow.
+
+## Centering the coordinates
+
+Our UV coordinates are useful, but the origin is still stuck in the bottom-left corner. For a lot of shader math, it's much nicer if the center of the screen is `(0, 0)`.
+
+So we remap from `0 -> 1` to `-1 -> 1`:
+
+```glsl
+uv = uv * 2.0 - 1.0;
+```
+
+<ShaderPlayground
+  client:visible
+  initialCode={`void mainImage(out vec4 fragColor, in vec2 fragCoord){
+    vec2 uv = fragCoord / iResolution.xy;
+
+    uv = uv * 2.0 - 1.0;
+
+    fragColor = vec4(uv, 0.0, 1.0);
+}`}
+/>
+
+```text
+0.0 * 2.0 - 1.0 = -1.0
+0.5 * 2.0 - 1.0 =  0.0
+1.0 * 2.0 - 1.0 =  1.0
+```
+
+So left is `-1`, center is `0`, right is `1`. The same thing happens vertically. This positions the coordinate system at the center of the screen.
+
+## Measuring distance with `length()`
+
+This is where things start getting interesting. Once the origin is at the center, we can figure out how far every fragment is from `(0, 0)` using GLSL's `length()`.
+
+<ShaderPlayground
+  client:visible
+  initialCode={`void mainImage(out vec4 fragColor, in vec2 fragCoord){
+    vec2 uv = fragCoord / iResolution.xy;
+    uv = uv * 2.0 - 1.0;
+
+    float d = length(uv);
+
+    fragColor = vec4(vec3(d), 1.0);
+}`}
+/>
+
+`length(uv)` gives the magnitude of the vector from the origin to our current point. This kinda sounds fancier than it is, however it's just the Pythagorean theorem. 
+
+If `uv = (x, y)`, then `length(uv)` is `sqrt(x² + y²)`. At the center, `uv = (0, 0)` and the distance is `0`. The farther out you go, the bigger the number gets.
+
+So every point on the screen now has a single number attached to it, based on its distance from the center. That's an example of a scalar field. Takes a 2D position in, and outputs one number out. This is particularly useful for building procedural shapes.
+
+You also might have noticed `vec3(d)`. If you pass a single number into a `vec3`, GLSL copies it into all three slots, so `vec3(d)` is basically shorthand for `vec3(d, d, d)`.
+
+Since red, green, and blue all end up with the same value, you get grayscale.
+
+
+## Fixing the aspect ratio
+
+There's one problem right now. Depending on the canvas size, something that should be a circle can end up looking more like an ellipse. That's because our coordinate system says width and height are both 2 units, but the actual screen might be `640 x 360`, so one unit horizontally covers more pixels than one unit vertically.
+
+`length()` assumes both axes use the same scale. However ours doesn't. To fix this, we can multiply the x-axis by the screen's aspect ratio.
+
+<ShaderPlayground
+  client:visible
+  initialCode={`void mainImage(out vec4 fragColor, in vec2 fragCoord){
+    vec2 uv = fragCoord / iResolution.xy;
+    uv = uv * 2.0 - 1.0;
+
+    uv.x *= iResolution.x / iResolution.y;
+
+    float d = length(uv);
+
+    fragColor = vec4(vec3(d), 1.0);
+}`}
+/>
+
+The aspect ratio is just width over height. For a `640 x 360` canvas that's `640 / 360 ≈ 1.78`, and scaling the x-axis by that amount makes the coordinate system behave evenly in both directions.
+
+A one liner for normalizing, centering, and aspect correction all at once could be:
+
+```glsl
+vec2 uv = (2.0 * fragCoord - iResolution.xy) / iResolution.y;
+```
+
+It looks like nonsense the first time you see it, but it's really the same steps condensed together. `2.0 * fragCoord - iResolution.xy` centers the coordinates around the middle of the screen, and dividing both axes by `iResolution.y` keeps one coordinate unit the same physical size horizontally and vertically. That gives us centered and aspect-correct coordinates in one line.
+
+Honestly, I prefer writing it out longhand right now, since it's easier to debug. Maybe I'll switch to shorthand when I get comfortable writing shader code.
+
+## Turning distance into a circle
+
+Right now we have a smooth distance gradient, but we can turn it into an actual shape. Let's start with a radius:
+
+```glsl
+float radius = 0.5;
+```
+
+and subtract it from the distance to get a signed value:
+
+```glsl
+float sd = length(uv) - radius;
+```
+
+I'm switching from `d` to `sd` here on purpose, since this number means something different now. It's not just "how far from the center", it's positive or negative depending on which side of the circle you're on:
+
+```text
+sd < 0  => inside the circle
+sd = 0  => exactly on the circle
+sd > 0  => outside the circle
+```
+
+This is a signed distance field, or SDF. Instead of just knowing how far a point is from the center, we now also know whether it's inside or outside the shape. We can turn that into black and white with `step()`.
+
+<ShaderPlayground
+  client:visible
+  initialCode={`void mainImage(out vec4 fragColor, in vec2 fragCoord){
+    vec2 uv = fragCoord / iResolution.xy;
+    uv = uv * 2.0 - 1.0;
+
+    uv.x *= iResolution.x / iResolution.y;
+
+    float radius = 0.5;
+    float sd = length(uv) - radius;
+
+    float circle = 1.0 - step(0.0, sd);
+
+    fragColor = vec4(vec3(circle), 1.0);
+}`}
+/>
+
+`step(edge, x)` returns either `0` or `1`, and here we're testing our signed distance against `0`. Inside the circle when `sd < 0`, outside when `sd > 0`.
+
+The `1.0 -` just flips it so the inside comes out white and the outside comes out black.
+
+And that's a circle, with no circle object and no vertices describing its edge. It's just distance math. I still find this kind of cool.
+
+## Smoothing the edge
+
+The circle we just rendered is fine, but the edge is razor sharp. This is because `step()` jumps instantly from one value to the other with nothing in between.
+
+`smoothstep()` fixes that.
+
+<ShaderPlayground
+  client:visible
+  initialCode={`void mainImage(out vec4 fragColor, in vec2 fragCoord){
+    vec2 uv = fragCoord / iResolution.xy;
+    uv = uv * 2.0 - 1.0;
+
+    uv.x *= iResolution.x / iResolution.y;
+
+    float radius = 0.5;
+    float sd = length(uv) - radius;
+
+    float circle = 1.0 - smoothstep(0.0, 0.02, sd);
+
+    fragColor = vec4(vec3(circle), 1.0);
+}`}
+/>
+
+Instead of snapping from `0` to `1`, `smoothstep()` gives a small transition band. Solid white inside, a smooth fade near the edge, solid black outside. The `0.02` controls how wide that band is.
+
+There's a catch though. That `0.02` is a fixed number, so the smoothing doesn't scale with resolution.
+
+If we bump the canvas up to 4K, that same `0.02` band covers a lot more actual pixels than it does at `640 x 360`, so the edge gets softer than intended. If we shrink the canvas down, it can look as hard as the plain `step()` version again.
+
+A more robust version uses `fwidth()`:
+
+```glsl
+float aa = fwidth(sd);
+float circle = 1.0 - smoothstep(0.0, aa, sd);
+```
+
+`fwidth()` gives us an estimate of how quickly `sd` changes across neighboring fragments, which makes it useful for choosing a transition width roughly related to a pixel instead of staying pinned at `0.02`.
+
+This is a lot of *derivatives* related stuff and that's a whole topic on its own, which I myself am yet to dip my feet in, but it's worth knowing the hardcoded value isn't the real answer, just the version that's easiest to reason about first.
+
+## Moving the circle
+
+So far the circle has just been sitting at `(0, 0)` because we're computing `length(uv)`. To put it somewhere else, let's pick a center point:
+
+```glsl
+vec2 center = vec2(0.5, 0.0);
+```
+
+and measure distance from that instead of from the origin:
+
+```glsl
+float sd = length(uv - center) - radius;
+```
+
+<ShaderPlayground
+  client:visible
+  initialCode={`void mainImage(out vec4 fragColor, in vec2 fragCoord){
+    vec2 uv = fragCoord / iResolution.xy;
+    uv = uv * 2.0 - 1.0;
+
+    uv.x *= iResolution.x / iResolution.y;
+
+    vec2 center = vec2(0.5, 0.0);
+
+    float radius = 0.5;
+    float sd = length(uv - center) - radius;
+
+    float circle = 1.0 - smoothstep(0.0, 0.02, sd);
+
+    fragColor = vec4(vec3(circle), 1.0);
+}`}
+/>
+
+`uv` is the current fragment's position, `uv - center` is that position relative to the circle, and `length(uv - center)` is the distance from the circle's center specifically.
+
+There's another way to think about this that I like more. We are not really moving the circle, but rather changing the coordinate system we are using to evaluate it. The shape itself is still `length(p) - radius`. We just changed what `p` means.
+
+## Animating the circle
+
+Now we can make the center change over time. Shadertoy gives us another uniform, `iTime`, which holds the number of seconds since the shader started running. 
+
+If we plug it in directly with `center.x = iTime`, the circle just drifts off in one direction forever. However, if we wrap it in `sin()`, it fixes that, since `sin(iTime)` oscillates smoothly between `-1` and `1` forever, which is exactly what you want for something moving back and forth.
+
+<ShaderPlayground
+  client:visible
+  initialCode={`void mainImage(out vec4 fragColor, in vec2 fragCoord){
+    vec2 uv = fragCoord / iResolution.xy;
+    uv = uv * 2.0 - 1.0;
+
+    uv.x *= iResolution.x / iResolution.y;
+
+    vec2 center = vec2(sin(iTime), 0.0);
+
+    float radius = 0.5;
+    float sd = length(uv - center) - radius;
+
+    float circle = 1.0 - smoothstep(0.0, 0.02, sd);
+
+    fragColor = vec4(vec3(circle), 1.0);
+}`}
+/>
+
+Now the circle moves left and right and back again, smoothly. You can control how far it travels with an *amplitude*. `center.x = 0.7 * sin(iTime)` moves less than `1.0 * sin(iTime)` would, and how fast with `center.x = 0.7 * sin(iTime * 2.0)`, where the `0.7` is how far it moves and the `2.0` is how quickly.
+
+This is one of the things I'm starting to really like about shader programming. A tiny mathematical tweak turns directly into motion. 
+
+*Makes me simultaneously fall in love with math as well.*
+
+## Putting it all together
+
+So the whole roadmap from a blank screen to an animated circle kinda looks like this:
+
+```text
+pixel coordinates
+        ↓
+normalized coordinates
+        ↓
+centered coordinates
+        ↓
+aspect-ratio correction
+        ↓
+distance from a point
+        ↓
+signed distance field
+        ↓
+threshold into a shape
+        ↓
+smooth the boundary
+        ↓
+transform the coordinates
+        ↓
+animate a parameter over time
+```
+
+---
+
+I'm still very much at the beginning of learning graphics programming, and there's still a ridiculous amount left to learn and program, such as rotation, noise, lighting, textures, ray marching, and definitely a lot of math that I'm currently unaware of. (*I'm glad.. coz I can't handle it all at once 😭*). 
+
+
+Hopefully, I keep learning and come up with even more cool stuff!

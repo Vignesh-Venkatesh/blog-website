@@ -107,6 +107,8 @@ export default function ShaderPlayground({aspectWidth = 16, aspectHeight=9, init
   const resolutionLocationRef = useRef<WebGLUniformLocation | null>(null)
   const timeLocationRef = useRef<WebGLUniformLocation | null>(null)
   const visibleRef = useRef(true)
+  const [outputTextColor, setOutputTextColor] = useState<"black" | "green">("green")
+  const lastContrastCheckRef = useRef(0)
 
   function resetCode() {
     setCode(initialCode);
@@ -208,6 +210,43 @@ export default function ShaderPlayground({aspectWidth = 16, aspectHeight=9, init
         gl?.viewport(0, 0, canvasElement.width, canvasElement.height)
 
         gl?.drawArrays(gl.TRIANGLES, 0, 3)
+
+        if (now - lastContrastCheckRef.current > 250) {
+          const scaleX = canvasElement.width / canvasElement.clientWidth
+          const scaleY = canvasElement.height / canvasElement.clientHeight
+
+          const sampleWidth = Math.min(canvasElement.width, Math.floor(90 * scaleX))
+          const sampleHeight = Math.min(canvasElement.height, Math.floor(32 * scaleY))
+
+          const pixels = new Uint8Array(sampleWidth * sampleHeight * 4)
+
+          gl?.readPixels(
+            0,
+            canvasElement.height - sampleHeight,
+            sampleWidth,
+            sampleHeight,
+            gl.RGBA,
+            gl.UNSIGNED_BYTE,
+            pixels,
+          )
+
+          let totalLuminance = 0
+          let pixelCount = 0
+
+          for (let i = 0; i < pixels.length; i += 4) {
+            const r = pixels[i]
+            const g = pixels[i + 1]
+            const b = pixels[i + 2]
+            totalLuminance += 0.2126 * r + 0.7152 * g + 0.0722 * b
+            pixelCount++
+          }
+
+          const averageLuminance = totalLuminance / pixelCount
+
+          setOutputTextColor(averageLuminance > 150 ? "black" : "green")
+
+          lastContrastCheckRef.current = now
+        }
       }
 
       animationFrameRef.current = requestAnimationFrame(render)
@@ -303,7 +342,7 @@ export default function ShaderPlayground({aspectWidth = 16, aspectHeight=9, init
   return (
     <div className="my-6 overflow-hidden rounded-lg border-border bg-surface">
       <div className="relative w-full bg-black" style={{ aspectRatio: validAspectRatio }}>
-        <div className="pointer-events-none absolute top-0 left-0 z-10 px-3 py-2 font-mono text-xs text-white/50 uppercase">
+        <div style={{ color: outputTextColor }} className="font-bold pointer-events-none absolute top-0 left-0 z-10 px-3 py-2 font-mono text-xs text-white/50 uppercase">
           OUTPUT
         </div>
         <canvas className="absolute inset-0 block h-full w-full" ref={canvasRef}/>
@@ -318,7 +357,7 @@ export default function ShaderPlayground({aspectWidth = 16, aspectHeight=9, init
           <button
             type="button"
             onClick={resetCode}
-            className="cursor-pointer font-mono text-xs text-muted transition-colors hover:text-foreground uppercase"
+            className="cursor-pointer font-mono text-xs text-muted transition-colors hover:text-foreground"
           >
             reset
           </button>
