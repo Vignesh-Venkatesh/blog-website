@@ -7,7 +7,7 @@ import Divider from "../components/Divider.astro";
 import PostList from "../components/PostList.astro";
 
 const posts = (await getCollection("blog"))
-    .filter((post) => !post.data.draft)
+    .filter((post) => !post.data.draft && post.data.showOnHome)
     .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
 ---
 
