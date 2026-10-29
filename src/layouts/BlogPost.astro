@@ -69,29 +69,29 @@ const older =
             </>
         )}
 
-        <header class="article-masthead-content relative z-10 mx-auto flex min-h-90 max-w-175 flex-col justify-center px-6 py-12 sm:min-h-105 sm:py-16">
-            <p class="article-reveal article-delay-1 font-mono text-[11px] text-accent">
+        <header class="article-masthead-content relative z-10 mx-auto flex min-h-80 max-w-175 flex-col justify-center px-6 py-10 sm:min-h-96 sm:py-12">
+            <p class="article-reveal article-delay-1 font-mono text-[10px] text-accent sm:text-[11px]">
                 {eyebrow}
             </p>
 
-            <h1 class="article-reveal article-delay-2 mt-4 max-w-155 font-serif text-4xl font-medium leading-[1.02] tracking-tight sm:text-5xl lg:text-[3.4rem]">
+            <h1 class="article-reveal article-delay-2 mt-3 max-w-155 font-serif text-[2.125rem] font-medium leading-[1.04] tracking-tight sm:text-[2.75rem] lg:text-[3.125rem]">
                 {post.data.title}
             </h1>
 
             {post.data.description && (
-                <p class="article-reveal article-delay-3 mt-5 max-w-142.5 font-serif text-lg leading-relaxed text-muted sm:text-xl">
+                <p class="article-reveal article-delay-3 mt-4 max-w-142.5 font-serif text-[1.0625rem] leading-[1.5] text-muted sm:text-lg">
                     {post.data.description}
                 </p>
             )}
 
-            <div class="article-reveal article-delay-4 mt-6 flex flex-wrap gap-2 font-mono text-[10px] text-faint sm:text-[11px]">
+            <div class="article-reveal article-delay-4 mt-4 flex flex-wrap gap-2 font-mono text-[10px] text-faint sm:text-[11px]">
                 <time datetime={dateTime}>{date}</time>
                 <span>·</span>
                 <span>{readTime}</span>
             </div>
 
             {post.data.tags.length > 0 && (
-                <div class="article-reveal article-delay-4 mt-5">
+                <div class="article-reveal article-delay-4 mt-4">
                     <div class="flex flex-wrap gap-x-3 gap-y-1 font-mono text-[10px] text-faint">
                         {post.data.tags.map((tag) => (
                             <a
@@ -115,8 +115,8 @@ const older =
         class:list={[
             "article-prose article-reveal article-delay-6 mx-auto max-w-170 px-6",
             post.data.category === "notebook"
-                ? "notebook-prose py-14 sm:py-20"
-                : "technical-prose py-12 sm:py-16",
+                ? "notebook-prose py-12 sm:py-16"
+                : "technical-prose py-10 sm:py-12",
         ]}
     >
         <slot />

@@ -221,13 +221,13 @@ body {
 
 .article-prose {
   font-family: var(--font-serif);
-  font-size: 1.125rem;
-  line-height: 1.72;
+  font-size: 1.0625rem;
+  line-height: 1.68;
   color: var(--color-muted);
 }
 
 .article-prose > * + * {
-  margin-top: 1.65rem;
+  margin-top: 0.875rem;
 }
 
 .article-prose h2,
@@ -240,18 +240,18 @@ body {
 }
 
 .article-prose h2 {
-  margin-top: 3.75rem;
-  font-size: 1.8rem;
+  margin-top: 1.75rem;
+  font-size: 1.625rem;
 }
 
 .article-prose h3 {
-  margin-top: 2.6rem;
-  font-size: 1.35rem;
+  margin-top: 1.625rem;
+  font-size: 1.25rem;
 }
 
 .article-prose h4 {
-  margin-top: 2rem;
-  font-size: 1.15rem;
+  margin-top: 1.5rem;
+  font-size: 1.0625rem;
 }
 
 .technical-prose h2 {
@@ -331,7 +331,7 @@ body {
 }
 
 .article-prose li + li {
-  margin-top: 0.45rem;
+  margin-top: 0.3125rem;
 }
 
 /*horizaontal rules*/
@@ -659,11 +659,11 @@ body {
 
 @media (max-width: 640px) {
   .article-prose {
-    font-size: 1.0625rem;
+    font-size: 1rem;
   }
 
   .article-prose h2 {
-    font-size: 1.6rem;
+    font-size: 1.5rem;
   }
 
   .article-prose .expressive-code {

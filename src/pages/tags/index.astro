@@ -23,18 +23,18 @@ const getTagSize = (count: number) => {
 
     const normalized = (count - minCount) / (maxCount - minCount);
 
-    return 0.85 + normalized * 1.15;
+    return 0.8 + normalized * 1.05;
 };
 ---
 
 <BaseLayout title="Tags | Vignesh Venkatesh">
-    <main class="mx-auto w-full max-w-175 px-6 py-12 sm:py-16">
-        <header class="mb-12">
-            <div class="page-reveal page-delay-1 mb-4 font-mono text-[10px] tracking-[0.12em] text-accent sm:text-[11px]">
+    <main class="mx-auto w-full max-w-175 px-6 py-10 sm:py-12">
+        <header class="mb-10">
+            <div class="page-reveal page-delay-1 mb-3 font-mono text-[10px] tracking-[0.12em] text-accent sm:text-[11px]">
                 tags
             </div>
 
-            <h1 class="page-reveal page-delay-2 max-w-xl font-serif text-3xl font-medium leading-[1.08] tracking-tight text-foreground sm:text-4xl">
+            <h1 class="page-reveal page-delay-2 max-w-xl font-serif text-[1.75rem] font-medium leading-[1.1] tracking-tight text-foreground sm:text-[2rem]">
                 Browse by topic.
             </h1>
         </header>

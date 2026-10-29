@@ -20,27 +20,27 @@ const formatDay = (date: Date) => String(date.getDate()).padStart(2, "0");
 ---
 
 <BaseLayout title="Archive | Vignesh Venkatesh">
-    <main class="mx-auto w-full max-w-175 px-6 py-12 sm:py-16">
+    <main class="mx-auto w-full max-w-175 px-6 py-10 sm:py-12">
         <!-- heading -->
         <header class="mb-12">
-            <div class="page-reveal page-delay-1 mb-4 font-mono text-[10px] tracking-[0.12em] text-accent sm:text-[11px]">
+            <div class="page-reveal page-delay-1 mb-3 font-mono text-[10px] tracking-[0.12em] text-accent sm:text-[11px]">
                 archive
             </div>
 
-            <h1 class="page-reveal page-delay-2 max-w-xl font-serif text-3xl font-medium leading-tight tracking-tight text-foreground sm:text-4xl">
+            <h1 class="page-reveal page-delay-2 max-w-xl font-serif text-[1.75rem] font-medium leading-[1.1] tracking-tight text-foreground sm:text-[2rem]">
                 All posts, in one place.
             </h1>
         </header>
 
         <!-- archive -->
-        <div class="space-y-10">
+        <div class="space-y-8">
             {[...postsByYear.entries()].map(([year, yearPosts], index) => (
                 <section
                     class="page-reveal"
                     style={`animation-delay: ${440 + Math.min(index, 3) * 90}ms`}
                 >
                     <!-- year heading -->
-                    <div class="mb-1 flex items-center justify-between border-b border-border pb-3 font-mono text-[10px] text-faint sm:text-[11px]">
+                    <div class="mb-1 flex items-center justify-between border-b border-border pb-2 font-mono text-[10px] text-faint sm:text-[11px]">
                         <span>{year}</span>
                         <span>
                             {String(yearPosts.length)}{" "}
@@ -71,7 +71,7 @@ const formatDay = (date: Date) => String(date.getDate()).padStart(2, "0");
                                     <!-- title -->
                                     <a
                                         href={href}
-                                        class="font-serif text-[0.95rem] leading-snug text-foreground transition-colors duration-150 hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent sm:text-base"
+                                        class="font-serif text-sm leading-snug text-foreground transition-colors duration-150 hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent sm:text-[0.9375rem]"
                                     >
                                         {post.data.title}
                                     </a>
