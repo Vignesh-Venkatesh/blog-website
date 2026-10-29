@@ -1,6 +1,6 @@
 ---
 title: "DNS Resolver in Go"
-description: "Building a DNS resolver from scratch in Go using only the standard library, from parsing the wire format to following referrals."
+description: "Building a DNS resolver from scratch in Go using only the standard library."
 date: 2026-04-12T23:00:00
 category: "technical"
 tags: ["networking", "dns", "dns-resolver", "go"]
@@ -9,7 +9,6 @@ draft: false
 showOnHome: true
 ---
 
-DNS resolution felt like magic until I built one myself. This post walks through how: parsing the wire format, following referrals, and handling the edge cases that don't show up until you implement it by hand.
 
 ## Why I Built This
 

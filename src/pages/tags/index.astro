@@ -44,7 +44,7 @@ const getTagSize = (count: number) => {
                 {tags.map(([tag, count]) => (
                     <a
                         href={`/tags/${tag}`}
-                        class="group font-serif leading-none text-muted transition-colors duration-150 hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                        class="group font-mono leading-none text-muted transition-colors duration-150 hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
                         style={`font-size: ${getTagSize(count)}rem`}
                     >
                         <span>{tag}</span>
