@@ -1,0 +1,170 @@
+---
+interface Props {
+    title?: string;
+    showArtwork?: boolean;
+    showLinks?: boolean;
+    artworkSrc?: string;
+    monochromeArtwork?: boolean;
+    wideArtwork?: boolean;
+}
+const {
+    title = "Welcome to my blog",
+    showArtwork = true,
+    showLinks = true,
+    artworkSrc = "/images/site/creation.svg",
+    monochromeArtwork = false,
+    wideArtwork = false,
+} = Astro.props;
+
+const links = [
+    { label: "technical", href: "/technical" },
+    { label: "notebook", href: "/notebook" },
+    { label: "archive", href: "/archive" },
+];
+---
+
+<section class="home-banner min-h-60" aria-labelledby="home-banner-title">
+    {showArtwork && <>
+    <div class:list={["banner-artwork", { "wide-artwork": wideArtwork }]} aria-hidden="true">
+    <img
+        class:list={["home-cover", { "monochrome-artwork": monochromeArtwork }]}
+        src={artworkSrc}
+        alt=""
+        aria-hidden="true"
+        loading="eager"
+        fetchpriority="high"
+    />
+    <div class="cover-fade" aria-hidden="true"></div>
+    </div>
+    </>}
+    <div class="banner-content">
+        <h1 id="home-banner-title">{title}</h1>
+        {showLinks && <nav aria-label="Blog sections">
+            {links.map(({ label, href }) => <a href={href}>{label}</a>)}
+        </nav>}
+    </div>
+</section>
+
+
+
+<style>
+    .home-banner {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        border-bottom: 1px solid var(--color-border);
+        display: grid;
+        align-items: center;
+        padding-block: 3rem;
+        text-align: left;
+    }
+
+    .banner-artwork {
+        position: absolute;
+        inset: 0;
+        width: min(100%, 62.5rem);
+        margin-inline: auto;
+        overflow: hidden;
+        pointer-events: none;
+    }
+
+    .home-cover {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+        filter: grayscale(1);
+        mix-blend-mode: screen;
+        opacity: 0;
+        transform: scale(1.3);
+        pointer-events: none;
+        user-select: none;
+        transition: opacity 1.2s ease-out, filter 1.2s ease-out, transform 1.7s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .banner-artwork.wide-artwork {
+        width: min(100%, 80rem);
+    }
+
+    .wide-artwork .cover-fade {
+        background: linear-gradient(
+            to right,
+            var(--color-background) 0%,
+            var(--color-background) 5%,
+            transparent 38%,
+            transparent 62%,
+            var(--color-background) 95%,
+            var(--color-background) 100%
+        );
+    }
+
+    .home-cover-loaded {
+        opacity: 0.16;
+        transform: scale(1);
+    }
+
+    .monochrome-artwork {
+        filter: grayscale(1) invert(1);
+        mix-blend-mode: screen;
+    }
+
+    .cover-fade {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: linear-gradient(
+            to right,
+            var(--color-background) 0%,
+            transparent 28%,
+            transparent 72%,
+            var(--color-background) 100%
+        );
+    }
+
+    .banner-content {
+        position: relative;
+        z-index: 1;
+        width: min(100% - 3rem, 43.75rem);
+        margin-inline: auto;
+        padding-inline: clamp(1rem, 3vw, 1.5rem);
+        display: grid;
+        justify-items: start;
+        gap: 1.35rem;
+    }
+
+    h1 {
+        margin: 0;
+        color: var(--color-foreground);
+        font: 400 clamp(2rem, 3vw, 2.35rem) / 1.1 var(--font-newsreader);
+    }
+
+    nav {
+        display: flex;
+        align-items: center;
+        gap: 1.35rem;
+    }
+
+    a {
+        color: var(--color-muted);
+        font: 400 0.7rem / 1 var(--font-google);
+        text-decoration: none;
+        transition: color 160ms ease;
+    }
+
+    a:hover,
+    a:focus-visible {
+        color: var(--color-accent);
+        font-weight: 600;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .home-cover,
+        .home-cover-loaded {
+            opacity: 0.16;
+            transform: none;
+            transition: none;
+        }
+    }
+</style>

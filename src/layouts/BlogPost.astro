@@ -50,7 +50,7 @@ const older =
                     src={post.data.cover}
                     alt=""
                     aria-hidden="true"
-                    class="article-cover pointer-events-none absolute inset-0 h-full w-full scale-[1.3] object-cover object-center select-none sm:scale-100"
+                    class="article-cover pointer-events-none absolute inset-0 h-full w-full object-cover object-center select-none"
                     loading="eager"
                     fetchpriority="high"
                 />
@@ -70,28 +70,28 @@ const older =
         )}
 
         <header class="article-masthead-content relative z-10 mx-auto flex min-h-80 max-w-175 flex-col justify-center px-6 py-10 sm:min-h-96 sm:py-12">
-            <p class="article-reveal article-delay-1 font-mono text-[10px] text-accent sm:text-[11px]">
+            <p class="font-mono text-[10px] text-accent sm:text-[11px]">
                 {eyebrow}
             </p>
 
-            <h1 class="article-reveal article-delay-2 mt-3 max-w-155 font-serif text-[2.125rem] font-medium leading-[1.04] tracking-tight sm:text-[2.75rem] lg:text-[3.125rem]">
+            <h1 class="mt-3 max-w-155 font-serif text-[2.125rem] font-medium leading-[1.04] sm:text-[2.75rem] lg:text-[3.125rem]">
                 {post.data.title}
             </h1>
 
             {post.data.description && (
-                <p class="article-reveal article-delay-3 mt-4 max-w-142.5 font-sans text-[1.0625rem] leading-[1.5] text-muted sm:text-lg">
+                <p class="mt-4 max-w-142.5 font-sans text-[1.0625rem] leading-[1.5] text-muted sm:text-lg">
                     {post.data.description}
                 </p>
             )}
 
-            <div class="article-reveal article-delay-4 mt-4 flex flex-wrap gap-2 font-mono text-[10px] text-faint sm:text-[11px]">
+            <div class="mt-4 flex flex-wrap gap-2 font-mono text-[10px] text-faint sm:text-[11px]">
                 <time datetime={dateTime}>{date}</time>
                 <span>·</span>
                 <span>{readTime}</span>
             </div>
 
             {post.data.tags.length > 0 && (
-                <div class="article-reveal article-delay-4 mt-4">
+                <div class="mt-4">
                     <div class="flex flex-wrap gap-x-3 gap-y-1 font-mono text-[10px] text-faint">
                         {post.data.tags.map((tag) => (
                             <a
@@ -107,13 +107,11 @@ const older =
         </header>
     </section>
 
-    <div class="article-reveal article-delay-5">
-        <Divider />
-    </div>
+    <Divider showMarkers={false} />
 
     <article
         class:list={[
-            "article-prose article-reveal article-delay-6 mx-auto max-w-170 px-6",
+            "article-prose mx-auto max-w-170 px-6",
             post.data.category === "notebook"
                 ? "notebook-prose py-12 sm:py-16"
                 : "technical-prose py-10 sm:py-12",
@@ -125,30 +123,4 @@ const older =
     </article>
 </main>
 
-<script>
-    const cover = document.querySelector<HTMLImageElement>(".article-cover");
 
-    if (cover) {
-        const reveal = async () => {
-            try {
-                await cover.decode();
-            } catch {
-                // the image may already be decoded or decoding may be unsupported
-            }
-
-            cover.classList.add("article-cover-loaded");
-        };
-
-        if (cover.complete && cover.naturalWidth > 0) {
-            void reveal();
-        } else {
-            cover.addEventListener(
-                "load",
-                () => {
-                    void reveal();
-                },
-                { once: true },
-            );
-        }
-    }
-</script>

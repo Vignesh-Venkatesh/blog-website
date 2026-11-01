@@ -1,99 +1,148 @@
 ---
+import { ArrowRight } from "@lucide/astro";
 import type { CollectionEntry } from "astro:content";
+import readingTime from "reading-time";
 import TagList from "./TagList.astro";
 import Divider from "./Divider.astro";
 
 interface Props {
     posts: CollectionEntry<"blog">[];
+    showHeading?: boolean;
+    flushTop?: boolean;
 }
-
-const { posts } = Astro.props;
-
-const formatDate = (date: Date) =>
-    date
-        .toLocaleDateString("en-US", {
-            month: "short",
-            day: "2-digit",
-            year: "numeric",
-        })
-        .toUpperCase();
+const { posts, showHeading = true, flushTop = false } = Astro.props;
+const formatDate = (date: Date) => date.toLocaleDateString("en-US", {
+    month: "short", day: "2-digit", year: "numeric", timeZone: "UTC",
+});
 ---
 
-<section class="mx-auto max-w-175 px-6 py-12 sm:py-16">
-    <div class="page-reveal page-delay-4 mb-6 flex items-center gap-2 font-mono text-[10px] tracking-[0.12em] text-faint sm:text-[11px]">
-        <span>{posts.length}</span>
-        <span>{posts.length === 1 ? "post" : "posts"}</span>
-    </div>
-
-    <div class="page-reveal page-delay-5">
-        <Divider />
-    </div>
-
-    <div class="page-reveal page-delay-6">
-        {posts.map((post, index) => {
-            const href = `/blog/${post.id}`;
-
-            return (
-                <article class="relative border-b border-border py-3">
-                    <div>
-                        <div class="mb-2 flex flex-wrap items-center gap-2 font-mono text-[10px] sm:text-[11px]">
-                            <!-- <span class="mr-1 text-faint">
-                                {String(index + 1).padStart(2, "0")}
-                            </span> -->
-
-                            <a
-                                href={`/${post.data.category}`}
-                                class:list={[
-                                    "transition-colors duration-150 hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent",
-                                    post.data.category === "technical"
-                                        ? "text-accent"
-                                        : "text-muted",
-                                ]}
-                            >
-                                {post.data.category}
-                            </a>
-
-                            <span class="text-faint">·</span>
-
-                            <time
-                                datetime={post.data.date.toISOString()}
-                                class="text-faint"
-                            >
-                                {formatDate(post.data.date)}
-                            </time>
-                        </div>
-
-                        <h2 class="font-serif text-[1.375rem] font-medium leading-[1.15] tracking-tight sm:text-2xl">
-                            <a
-                                href={href}
-                                class="text-foreground transition-colors duration-150 hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
-                            >
-                                {post.data.title}
-                            </a>
-                        </h2>
-
-                        <p
-                            class:list={[
-                                "mt-1.5 max-w-2xl font-sans text-[0.9375rem] leading-[1.5] text-muted sm:text-base",
-                                post.data.category === "notebook" && "italic",
-                            ]}
-                        >
-                            {post.data.description}
-                        </p>
-
-                        <div class="mt-2.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
-                            <TagList tags={post.data.tags} />
-
-                            <a
-                                href={href}
-                                class="font-mono text-[10px] text-faint transition-colors duration-150 hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent sm:text-[11px]"
-                            >
-                                read →
-                            </a>
-                        </div>
+<section class:list={["post-list", { "flush-top": flushTop }]} aria-label="Blog posts">
+    {showHeading && <Divider contained markersOnly />}
+    {showHeading && <div class="list-heading">
+        <span>latest writing</span>
+        <span>{posts.length} {posts.length === 1 ? "post" : "posts"}</span>
+    </div>}
+    <Divider contained markersOnly={flushTop && !showHeading} />
+    {posts.map((post, index) => {
+        const href = `/blog/${post.id}`;
+        return (
+            <article>
+                <div class="post-content">
+                    <div class="post-reveal" style={`--post-delay: ${120 + Math.min(index, 10) * 110}ms`}>
+                    <div class="post-meta">
+                        <a class:list={["category", { "category-notebook": post.data.category === "notebook" }]} href={`/${post.data.category}`}>{post.data.category}</a>
+                        <span aria-hidden="true">·</span>
+                        <time datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time>
+                        <span aria-hidden="true">·</span>
+                        <span>{readingTime(post.body ?? "").text}</span>
                     </div>
-                </article>
-            );
-        })}
-    </div>
+                    <h2><a href={href}>{post.data.title}</a></h2>
+                    <p class="description">{post.data.description}</p>
+                    <div class="post-bottom">
+                        <TagList tags={post.data.tags} />
+                        <a class="read-link" href={href} aria-label={`Read ${post.data.title}`}>read post <ArrowRight size={14} strokeWidth={1.5} aria-hidden="true" /></a>
+                    </div>
+                    </div>
+                </div>
+                <Divider contained />
+            </article>
+        );
+    })}
+    {flushTop && posts.length > 0 && <>
+        <div class="post-list-tail" aria-hidden="true"></div>
+        <Divider contained markersOnly />
+    </>}
+    {posts.length === 0 && <p class="empty-state">No posts published yet.</p>}
 </section>
+
+<style>
+    .post-list {
+        --grid-line: color-mix(in oklab, var(--color-foreground) 28%, var(--color-background));
+        padding-top: 0;
+    }
+
+    .post-list.flush-top {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        padding-top: 0;
+    }
+
+    .post-list-tail {
+        flex: 1;
+        width: min(100% - 3rem, 43.75rem);
+        margin-inline: auto;
+        border-inline: 1px solid var(--grid-line);
+    }
+
+    .list-heading,
+    .post-content,
+    .empty-state {
+        width: min(100% - 3rem, 43.75rem);
+        margin-inline: auto;
+    }
+
+    .list-heading {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1.25rem clamp(1rem, 3vw, 1.5rem);
+        border-inline: 1px solid var(--grid-line);
+        color: var(--color-muted);
+        font: 400 0.75rem/1.5 var(--font-google);
+    }
+
+    .post-content {
+        padding-block: 1.5rem;
+        padding-inline: clamp(1rem, 3vw, 1.5rem);
+        border-inline: 1px solid var(--grid-line);
+    }
+
+    .post-meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--color-muted);
+        font: 400 0.7rem/1.6 var(--font-google);
+    }
+
+    .category { color: var(--color-accent); }
+    .category-notebook { color: var(--color-foreground); }
+
+    h2 {
+        max-width: 52rem;
+        margin: 0.85rem 0 0.65rem;
+        color: var(--color-foreground);
+        font: 500 clamp(1.125rem, 2.5vw, 1.5rem)/1.4 var(--font-google);
+        overflow-wrap: anywhere;
+    }
+
+    .description {
+        max-width: 44rem;
+        margin: 0;
+        color: var(--color-muted);
+        font: 400 0.9375rem/1.7 var(--font-geist);
+    }
+
+    .post-bottom {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .read-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        color: var(--color-muted);
+        font: 400 0.75rem/1.5 var(--font-google);
+    }
+
+    a { text-decoration: none; transition: color 160ms ease; }
+    a:hover, a:focus-visible { color: var(--color-accent); font-weight: 600; }
+    .empty-state { padding-block: 2rem; color: var(--color-muted); }
+</style>

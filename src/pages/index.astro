@@ -1,20 +1,15 @@
 ---
 import { getCollection } from "astro:content";
-
 import BaseLayout from "../layouts/BaseLayout.astro";
-import Intro from "../components/Intro.astro";
-import Divider from "../components/Divider.astro";
+import HomeScreenBanner from "../components/HomeScreenBanner.astro";
 import PostList from "../components/PostList.astro";
-
 const posts = (await getCollection("blog"))
-    .filter((post) => !post.data.draft && post.data.showOnHome)
+    .filter(({ data }) => !data.draft && data.showOnHome)
     .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
 ---
-
-<BaseLayout title="Blog | Vignesh Venkatesh">
-    <Intro />
-    <div class="page-reveal page-delay-3">
-        <Divider />
-    </div>
-    <PostList posts={posts} />
+<BaseLayout title="Vignesh | Blog">
+    <main aria-label="Blog content">
+        <HomeScreenBanner />
+        <PostList posts={posts} />
+    </main>
 </BaseLayout>

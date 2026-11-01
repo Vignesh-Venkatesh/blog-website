@@ -1,133 +1,24 @@
 ---
 import { getCollection } from "astro:content";
-import readingTime from "reading-time";
-
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import TagList from "../../components/TagList.astro";
+import HomeScreenBanner from "../../components/HomeScreenBanner.astro";
+import PostList from "../../components/PostList.astro";
 
 export async function getStaticPaths() {
-    const posts = (await getCollection("blog")).filter(
-        (post) => !post.data.draft,
-    );
+    const posts = await getCollection("blog", ({ data }) => !data.draft);
     const tags = [...new Set(posts.flatMap((post) => post.data.tags))];
-    return tags.map((tag) => ({
-        params: { tag },
-    }));
+    return tags.map((tag) => ({ params: { tag } }));
 }
 
 const tag = Astro.params.tag!;
-
 const posts = (await getCollection("blog"))
-    .filter((post) => !post.data.draft && post.data.tags.includes(tag))
+    .filter(({ data }) => !data.draft && data.tags.includes(tag))
     .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
-
-const postsByYear = Map.groupBy(posts, (post) => post.data.date.getFullYear());
-
-const formatDate = (date: Date) =>
-    date
-        .toLocaleDateString("en-US", {
-            month: "short",
-            day: "2-digit",
-            year: "numeric",
-        })
-        .toUpperCase();
 ---
 
 <BaseLayout title={`#${tag} | Vignesh Venkatesh`}>
-    <main class="mx-auto w-full max-w-175 px-6 py-10 sm:py-12">
-        <header class="mb-12">
-            <div class="page-reveal page-delay-1 mb-3 font-mono text-[10px] tracking-[0.12em] text-accent sm:text-[11px]">
-                / tags / {tag}
-            </div>
-
-            <h1 class="page-reveal page-delay-2 font-serif text-[1.75rem] font-medium leading-[1.1] tracking-tight text-foreground sm:text-[2rem]">
-                #{tag}
-            </h1>
-
-            <p class="page-reveal page-delay-3 mt-3 font-mono text-[9px] text-faint sm:text-[10px]">
-                {posts.length} {posts.length === 1 ? "entry" : "entries"}
-            </p>
-        </header>
-
-        {posts.length > 0 ? (
-            <div class="space-y-8">
-                {[...postsByYear.entries()].map(([year, yearPosts], index) => (
-                    <section
-                        class="page-reveal"
-                        style={`animation-delay: ${440 + Math.min(index, 3) * 90}ms`}
-                    >
-                        <div class="border-b border-border pb-2 font-mono text-[10px] text-faint sm:text-[11px]">
-                            {year}
-                        </div>
-
-                        <div>
-                            {yearPosts.map((post) => {
-                                const href = `/blog/${post.id}`;
-                                const stats = readingTime(post.body ?? "");
-
-                                return (
-                                    <article class="border-b border-border py-3">
-                                        <div class="mb-2 flex flex-wrap items-center gap-2 font-mono text-[9px] text-faint sm:text-[10px]">
-                                            <a
-                                                href={`/${post.data.category}`}
-                                                class="transition-colors duration-150 hover:text-accent"
-                                            >
-                                                {post.data.category}
-                                            </a>
-
-                                            <span>·</span>
-
-                                            <time
-                                                datetime={post.data.date.toISOString()}
-                                            >
-                                                {formatDate(post.data.date)}
-                                            </time>
-
-                                            <span>·</span>
-
-                                            <span>{stats.text}</span>
-                                        </div>
-
-                                        <h2 class="font-serif text-[1.375rem] font-medium leading-[1.15] tracking-tight sm:text-2xl">
-                                            <a
-                                                href={href}
-                                                class="text-foreground transition-colors duration-150 hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
-                                            >
-                                                {post.data.title}
-                                            </a>
-                                        </h2>
-
-                                        <p
-                                            class:list={[
-                                                "mt-1.5 max-w-2xl font-sans text-[0.9375rem] leading-[1.5] text-muted sm:text-base",
-                                                post.data.category ===
-                                                    "notebook" && "italic",
-                                            ]}
-                                        >
-                                            {post.data.description}
-                                        </p>
-
-                                        <div class="mt-2.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
-                                            <TagList tags={post.data.tags} />
-
-                                            <a
-                                                href={href}
-                                                class="font-mono text-[10px] text-faint transition-colors duration-150 hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent sm:text-[11px]"
-                                            >
-                                                read →
-                                            </a>
-                                        </div>
-                                    </article>
-                                );
-                            })}
-                        </div>
-                    </section>
-                ))}
-            </div>
-        ) : (
-            <p class="page-reveal page-delay-4 font-mono text-[10px] text-faint sm:text-[11px]">
-                Nothing filed under this tag yet.
-            </p>
-        )}
+    <main class="category-page" aria-label={`Posts tagged ${tag}`}>
+        <HomeScreenBanner title={`#${tag}`} artworkSrc="/images/banners/tags.webp" monochromeArtwork showLinks={false} />
+        <PostList posts={posts} showHeading={false} flushTop />
     </main>
 </BaseLayout>

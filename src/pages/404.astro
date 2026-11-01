@@ -1,8 +1,70 @@
 ---
+import { ArrowLeft, ArrowRight } from "@lucide/astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
-import NotFound from "../components/NotFound.astro";
+import ContentFrame from "../components/ContentFrame.astro";
 ---
 
-<BaseLayout title="[404] Page not found" showChrome={false}>
-    <NotFound />
+<BaseLayout title="Page not found | vigi." description="This page couldn’t be found. Find your way back to the blog or browse the archive." noindex>
+    <main class="category-page not-found-main" aria-labelledby="not-found-title">
+        <ContentFrame>
+            <section class="not-found">
+                <h1 id="not-found-title" class="error-code">404</h1>
+                <p class="description">The page you’re looking for may have moved, or the link might be wrong</p>
+                <p class="description">Still plenty to read though.</p>
+                <nav class="recovery-links" aria-label="Find your way back">
+                    <a href="/" class="home-link"><ArrowLeft size={15} strokeWidth={1.5} aria-hidden="true" /> back home</a>
+                    <a href="/archive">browse the archive <ArrowRight size={15} strokeWidth={1.5} aria-hidden="true" /></a>
+                </nav>
+            </section>
+        </ContentFrame>
+    </main>
 </BaseLayout>
+
+<style>
+    .not-found-main :global(.divider-markers) {
+        z-index: 3;
+    }
+
+    .not-found-main :global(.content-frame) {
+        display: flex;
+        align-items: center;
+    }
+
+    .not-found {
+        width: 100%;
+        padding-block: 3rem;
+    }
+
+    .error-code {
+        margin: 0 0 1rem;
+        color: color-mix(in srgb, var(--color-accent) 45%, var(--color-background));
+        font: 700 1.25rem / 1.5 var(--font-geist);
+    }
+
+    .description {
+        max-width: 26rem;
+        margin: 1rem 0 0;
+        color: var(--color-muted);
+        font: 400 0.9375rem / 1.75 var(--font-geist);
+    }
+
+    .recovery-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem 2rem;
+        margin-top: 2rem;
+    }
+
+    a {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--color-muted);
+        font: 600 0.75rem / 1.5 var(--font-google);
+        text-decoration: none;
+        transition: color 160ms ease;
+    }
+
+    .home-link { color: var(--color-foreground); }
+    a:hover, a:focus-visible { color: var(--color-accent); }
+</style>

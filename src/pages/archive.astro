@@ -2,12 +2,15 @@
 import { getCollection } from "astro:content";
 
 import BaseLayout from "../layouts/BaseLayout.astro";
+import HomeScreenBanner from "../components/HomeScreenBanner.astro";
+import ContentFrame from "../components/ContentFrame.astro";
 
 const posts = (await getCollection("blog"))
     .filter((post) => !post.data.draft)
     .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
 
 const postsByYear = Map.groupBy(posts, (post) => post.data.date.getFullYear());
+const postOrder = new Map(posts.map((post, index) => [post.id, index]));
 
 const formatMonth = (date: Date) =>
     date
@@ -20,27 +23,16 @@ const formatDay = (date: Date) => String(date.getDate()).padStart(2, "0");
 ---
 
 <BaseLayout title="Archive | Vignesh Venkatesh">
-    <main class="mx-auto w-full max-w-175 px-6 py-10 sm:py-12">
-        <!-- heading -->
-        <header class="mb-12">
-            <div class="page-reveal page-delay-1 mb-3 font-mono text-[10px] tracking-[0.12em] text-accent sm:text-[11px]">
-                archive
-            </div>
-
-            <h1 class="page-reveal page-delay-2 max-w-xl font-serif text-[1.75rem] font-medium leading-[1.1] tracking-tight text-foreground sm:text-[2rem]">
-                All my writings.
-            </h1>
-        </header>
+    <main class="category-page" aria-label="Archive">
+        <HomeScreenBanner title="All my writings." artworkSrc="/images/banners/archive.webp" monochromeArtwork showLinks={false} />
+        <ContentFrame edgeToEdge>
 
         <!-- archive -->
         <div class="space-y-8">
-            {[...postsByYear.entries()].map(([year, yearPosts], index) => (
-                <section
-                    class="page-reveal"
-                    style={`animation-delay: ${440 + Math.min(index, 3) * 90}ms`}
-                >
+            {[...postsByYear.entries()].map(([year, yearPosts]) => (
+                <section>
                     <!-- year heading -->
-                    <div class="mb-1 flex items-center justify-between border-b border-border pb-2 font-mono text-[10px] text-faint sm:text-[11px]">
+                    <div class="mb-1 flex items-center justify-between border-b border-border px-4 pb-2 font-mono text-[10px] text-faint sm:px-6 sm:text-[11px]">
                         <span>{year}</span>
                         <span>
                             {String(yearPosts.length)}{" "}
@@ -53,7 +45,8 @@ const formatDay = (date: Date) => String(date.getDate()).padStart(2, "0");
                         {yearPosts.map((post, index) => {
                             const href = `/blog/${post.id}`;
                             return (
-                                <article class="grid grid-cols-[2rem_3.25rem_minmax(0,1fr)] items-baseline gap-x-3 border-b border-border py-2.5 sm:grid-cols-[2.25rem_3.5rem_minmax(0,1fr)_auto] sm:gap-x-5">
+                                <article class="border-b border-border">
+                                    <div class="post-reveal grid grid-cols-[2rem_3.25rem_minmax(0,1fr)] items-baseline gap-x-3 px-4 py-2.5 sm:grid-cols-[2.25rem_3.5rem_minmax(0,1fr)_auto] sm:gap-x-5 sm:px-6" style={`--post-delay: ${120 + Math.min(postOrder.get(post.id) ?? 0, 10) * 110}ms`}>
                                     <!-- index -->
                                     <span class="font-mono text-[9px] text-faint sm:text-[10px] text-end">
                                         {String(yearPosts.length - index)}
@@ -85,6 +78,7 @@ const formatDay = (date: Date) => String(date.getDate()).padStart(2, "0");
                                     >
                                         {post.data.category}
                                     </a>
+                                    </div>
                                 </article>
                             );
                         })}
@@ -92,5 +86,6 @@ const formatDay = (date: Date) => String(date.getDate()).padStart(2, "0");
                 </section>
             ))}
         </div>
+        </ContentFrame>
     </main>
 </BaseLayout>
