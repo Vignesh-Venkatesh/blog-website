@@ -1,0 +1,31 @@
+---
+import Divider from "./Divider.astro";
+interface Props { edgeToEdge?: boolean; }
+const { edgeToEdge = false } = Astro.props;
+---
+
+<div class="content-frame-wrap">
+    <Divider contained markersOnly />
+    <div class:list={["content-frame", { "edge-to-edge": edgeToEdge }]}><slot /></div>
+    <Divider contained markersOnly />
+</div>
+
+<style>
+    .content-frame-wrap {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+    }
+
+    .content-frame {
+        flex: 1;
+        width: min(100% - 3rem, 43.75rem);
+        margin-inline: auto;
+        padding: 2.5rem clamp(1rem, 3vw, 1.5rem);
+        border-inline: 1px solid color-mix(in oklab, var(--color-foreground) 28%, var(--color-background));
+    }
+
+    .content-frame.edge-to-edge {
+        padding-inline: 0;
+    }
+</style>

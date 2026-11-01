@@ -23,7 +23,7 @@ const { src, alt, caption, credit } = Astro.props;
     />
 
     {(caption || credit) && (
-        <figcaption>
+        <figcaption class="text-muted">
             {caption && <span>{caption}</span>}
             {credit && <span class="figure-credit">{credit}</span>}
         </figcaption>

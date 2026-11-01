@@ -1,9 +1,59 @@
 ---
+interface Props {
+    contained?: boolean;
+    markersOnly?: boolean;
+    showMarkers?: boolean;
+}
+const { contained = false, markersOnly = false, showMarkers = true } = Astro.props;
 ---
 
-<section class="relative z-1 border-y border-white/5" aria-hidden="true">
-    <div
-        class="h-1.5 w-full opacity-50
-           bg-[repeating-linear-gradient(-45deg,var(--color-border),var(--color-border)_1px,transparent_1px,transparent_6px)]"
-    ></div>
-</section>
+<div class:list={["section-divider", { contained, "markers-only": markersOnly }]} aria-hidden="true">
+    {showMarkers && <div class="divider-markers"></div>}
+</div>
+
+<style>
+    .section-divider {
+        --grid-line: color-mix(in oklab, var(--color-foreground) 28%, var(--color-background));
+        --grid-marker: color-mix(in oklab, var(--color-foreground) 72%, var(--color-background));
+        height: 1px;
+        width: 100%;
+        background: var(--grid-line);
+    }
+
+    .divider-markers {
+        position: relative;
+        width: min(100% - 3rem, 43.75rem);
+        height: 1px;
+        margin-inline: auto;
+    }
+
+    .divider-markers::before,
+    .divider-markers::after {
+        position: absolute;
+        z-index: 1;
+        top: -5.5px;
+        width: 12px;
+        height: 12px;
+        content: "";
+        background:
+            linear-gradient(var(--grid-marker), var(--grid-marker)) center / 1px 100% no-repeat,
+            linear-gradient(var(--grid-marker), var(--grid-marker)) center / 100% 1px no-repeat;
+    }
+
+    .divider-markers::before { left: -6px; }
+    .divider-markers::after { right: -6px; }
+
+    .contained {
+        width: min(100% - 3rem, 43.75rem);
+        margin-inline: auto;
+    }
+
+    .contained .divider-markers {
+        width: 100%;
+    }
+
+    .markers-only {
+        height: 0;
+        background: none;
+    }
+</style>

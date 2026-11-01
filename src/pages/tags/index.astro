@@ -1,6 +1,8 @@
 ---
 import { getCollection } from "astro:content";
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import HomeScreenBanner from "../../components/HomeScreenBanner.astro";
+import ContentFrame from "../../components/ContentFrame.astro";
 
 const posts = (await getCollection("blog")).filter((post) => !post.data.draft);
 
@@ -28,24 +30,17 @@ const getTagSize = (count: number) => {
 ---
 
 <BaseLayout title="Tags | Vignesh Venkatesh">
-    <main class="mx-auto w-full max-w-175 px-6 py-10 sm:py-12">
-        <header class="mb-10">
-            <div class="page-reveal page-delay-1 mb-3 font-mono text-[10px] tracking-[0.12em] text-accent sm:text-[11px]">
-                tags
-            </div>
-
-            <h1 class="page-reveal page-delay-2 max-w-xl font-serif text-[1.75rem] font-medium leading-[1.1] tracking-tight text-foreground sm:text-[2rem]">
-                Browse by topic.
-            </h1>
-        </header>
+    <main class="category-page" aria-label="Tags">
+        <HomeScreenBanner title="Browse by topic." artworkSrc="/images/banners/tags.webp" monochromeArtwork showLinks={false} />
+        <ContentFrame>
 
         {tags.length > 0 ? (
-            <div class="page-reveal page-delay-4 flex max-w-2xl flex-wrap items-baseline gap-x-6 gap-y-4">
-                {tags.map(([tag, count]) => (
+            <div class="flex max-w-2xl flex-wrap items-baseline gap-x-6 gap-y-4">
+                {tags.map(([tag, count], index) => (
                     <a
                         href={`/tags/${tag}`}
-                        class="group font-mono leading-none text-muted transition-colors duration-150 hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
-                        style={`font-size: ${getTagSize(count)}rem`}
+                        class="post-reveal group font-mono leading-none text-muted transition-colors duration-150 hover:text-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                        style={`font-size: ${getTagSize(count)}rem; --post-delay: ${120 + index * 110}ms`}
                     >
                         <span>{tag}</span>
 
@@ -56,9 +51,10 @@ const getTagSize = (count: number) => {
                 ))}
             </div>
         ) : (
-            <p class="page-reveal page-delay-4 font-mono text-[10px] text-faint sm:text-[11px]">
+            <p class="font-mono text-[10px] text-faint sm:text-[11px]">
                 No tags yet.
             </p>
         )}
+        </ContentFrame>
     </main>
 </BaseLayout>
