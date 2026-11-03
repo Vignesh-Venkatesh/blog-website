@@ -4,12 +4,26 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import HomeScreenBanner from "../components/HomeScreenBanner.astro";
 import PostList from "../components/PostList.astro";
 const posts = (await getCollection("blog"))
-    .filter(({ data }) => !data.draft && data.showOnHome)
+    .filter(({ data }) => !data.draft)
     .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+const pinnedPosts = posts.filter(({ data }) => data.pinnedPost);
 ---
 <BaseLayout title="Vignesh | Blog">
-    <main aria-label="Blog content">
+    <main class="category-page" aria-label="Blog content">
         <HomeScreenBanner />
-        <PostList posts={posts} />
+        <PostList posts={pinnedPosts} heading="pinned posts" />
+        <div class="section-gap" aria-hidden="true"></div>
+        <PostList posts={posts} showHeading={false} compact showCategory flushTop />
     </main>
 </BaseLayout>
+
+<style>
+    .section-gap {
+        width: min(100% - 3rem, 43.75rem);
+        height: clamp(2.5rem, 6vw, 4rem);
+        flex-shrink: 0;
+        margin-inline: auto;
+        border-inline: 1px solid color-mix(in oklab, var(--color-foreground) 28%, var(--color-background));
+        border-bottom: 1px solid color-mix(in oklab, var(--color-foreground) 28%, var(--color-background));
+    }
+</style>

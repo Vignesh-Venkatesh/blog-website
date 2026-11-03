@@ -280,6 +280,7 @@ main {
 /*footnotes*/
 
 .footnotes {
+  overflow-wrap: anywhere;
   margin-top: 4rem;
   border-top: 1px solid var(--color-border);
   padding-top: 1.25rem;
@@ -352,14 +353,14 @@ a:hover, a:focus-visible { color: var(--color-accent); font-weight: 600; }
 }
 
 .article-cover-loaded {
-    opacity: 0.16;
+    opacity: 0.3;
     transform: scale(1);
 }
 
 @media (prefers-reduced-motion: reduce) {
     .article-cover,
     .article-cover-loaded {
-        opacity: 0.16;
+        opacity: 0.3;
         transform: none;
         transition: none;
     }

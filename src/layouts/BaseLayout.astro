@@ -3,9 +3,18 @@ import { ClientRouter } from "astro:transitions";
 import Navbar from "../components/Navbar.astro";
 import Footer from "../components/Footer.astro";
 import "../styles/global.css";
-interface Props { title: string; description?: string; noindex?: boolean; }
-const { title, description = "Engineering notes, projects, and writing by Vignesh Venkatesh.", noindex = false } = Astro.props;
+interface Props {
+    title: string;
+    description?: string;
+    noindex?: boolean;
+}
+const {
+    title,
+    description = "Engineering notes, projects, and writing by Vignesh Venkatesh.",
+    noindex = false,
+} = Astro.props;
 ---
+
 <html lang="en" data-theme="dark" transition:animate="none">
     <head>
         <meta charset="utf-8" />
@@ -28,6 +37,5 @@ const { title, description = "Engineering notes, projects, and writing by Vignes
         <Footer />
     </body>
 </html>
-
 
 <script src="../scripts/reveal-covers.ts"></script>

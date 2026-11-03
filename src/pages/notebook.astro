@@ -12,6 +12,6 @@ const posts = (await getCollection("blog"))
 <BaseLayout title="Notebook | Vignesh Venkatesh">
     <main class="category-page" aria-label="Notebook posts">
         <HomeScreenBanner title="Thoughts and observations." artworkSrc="/images/banners/notebook.webp" monochromeArtwork showLinks={false} />
-        <PostList posts={posts} showHeading={false} flushTop />
+        <PostList posts={posts} showHeading={false} flushTop compact />
     </main>
 </BaseLayout>

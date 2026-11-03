@@ -15,6 +15,7 @@ category: technical
 tags: [astro, projects]
 draft: false
 showOnHome: true
+# pinnedPost: true
 # updated: 2026-11-01
 # cover: "/images/covers/my-post.webp"
 # format: project
@@ -25,7 +26,8 @@ Write normal Markdown below the frontmatter. Use MDX when embedding components. 
 
 - `category`: `technical` (default) or `notebook`.
 - `draft`: defaults to `true`. Draft URLs are available in development but excluded from production and public lists.
-- `showOnHome`: defaults to `false`. Published posts always appear in their category, archive, and tag pages; set this to `true` to feature them on the homepage.
+- `showOnHome`: legacy field, defaults to `false`. The homepage now lists all published posts.
+- `pinnedPost`: defaults to `false`. Set this to `true` to feature a published post in the homepage's pinned posts section. Pinned posts appear newest first and also appear in the all posts list below, grouped by year. Drafts remain hidden.
 - `format`: optional `project`, `paper`, `essay`, `note`, `photo`, or `poem`.
 - Dates, title, and description are validated by `src/content.config.ts`.
 

@@ -9,26 +9,51 @@ interface Props {
     posts: CollectionEntry<"blog">[];
     showHeading?: boolean;
     flushTop?: boolean;
+    compact?: boolean;
+    showCategory?: boolean;
+    heading?: string;
+    showCount?: boolean;
+    headingDivider?: boolean;
 }
-const { posts, showHeading = true, flushTop = false } = Astro.props;
+const { posts, showHeading = true, flushTop = false, compact = false, showCategory = false, heading = "latest writing", showCount = true, headingDivider = false } = Astro.props;
+const postsByYear = Map.groupBy(posts, (post) => post.data.date.getUTCFullYear());
 const formatDate = (date: Date) => date.toLocaleDateString("en-US", {
     month: "short", day: "2-digit", year: "numeric", timeZone: "UTC",
 });
 ---
 
-<section class:list={["post-list", { "flush-top": flushTop }]} aria-label="Blog posts">
-    {showHeading && <Divider contained markersOnly />}
+<section class:list={["post-list", { "flush-top": flushTop, compact }]} aria-label={showHeading ? heading : "Blog posts"}>
+    {showHeading && <Divider contained markersOnly={!headingDivider} />}
     {showHeading && <div class="list-heading">
-        <span>latest writing</span>
-        <span>{posts.length} {posts.length === 1 ? "post" : "posts"}</span>
+        <span>{heading}</span>
+        {showCount && <span>{posts.length} {posts.length === 1 ? "post" : "posts"}</span>}
     </div>}
     <Divider contained markersOnly={flushTop && !showHeading} />
     {posts.map((post, index) => {
         const href = `/blog/${post.id}`;
+        const year = post.data.date.getUTCFullYear();
+        const startsYear = compact && (index === 0 || posts[index - 1].data.date.getUTCFullYear() !== year);
+        const yearCount = postsByYear.get(year)?.length ?? 0;
         return (
+            <>
+            {startsYear && <div class="year-heading">
+                <h2>{year}</h2>
+                <span>{yearCount} {yearCount === 1 ? "post" : "posts"}</span>
+            </div>}
             <article>
                 <div class="post-content">
                     <div class="post-reveal" style={`--post-delay: ${120 + Math.min(index, 10) * 110}ms`}>
+                    {compact ? <div class:list={["compact-row", { "with-category": showCategory }]}>
+                        <time datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time>
+                        <h2><a href={href}>{post.data.title}</a></h2>
+                        {showCategory && <a class="compact-category" href={`/${post.data.category}`}>{post.data.category}</a>}
+                        <div class="compact-bottom">
+                            <TagList tags={post.data.tags} />
+                            <div class="compact-actions">
+                            <a class="read-link" href={href} aria-label={`Read ${post.data.title}`}>read post <ArrowRight size={14} strokeWidth={1.5} aria-hidden="true" /></a>
+                            </div>
+                        </div>
+                    </div> : <>
                     <div class="post-meta">
                         <a class:list={["category", { "category-notebook": post.data.category === "notebook" }]} href={`/${post.data.category}`}>{post.data.category}</a>
                         <span aria-hidden="true">·</span>
@@ -42,10 +67,12 @@ const formatDate = (date: Date) => date.toLocaleDateString("en-US", {
                         <TagList tags={post.data.tags} />
                         <a class="read-link" href={href} aria-label={`Read ${post.data.title}`}>read post <ArrowRight size={14} strokeWidth={1.5} aria-hidden="true" /></a>
                     </div>
+                    </>}
                     </div>
                 </div>
                 <Divider contained />
             </article>
+            </>
         );
     })}
     {flushTop && posts.length > 0 && <>
@@ -109,6 +136,94 @@ const formatDate = (date: Date) => date.toLocaleDateString("en-US", {
 
     .category { color: var(--color-accent); }
     .category-notebook { color: var(--color-foreground); }
+
+    .compact .post-content {
+        padding-block: 0.625rem;
+    }
+
+    .compact-row {
+        display: grid;
+        grid-template-columns: 6.5rem minmax(0, 1fr);
+        align-items: baseline;
+        gap: 0.75rem;
+    }
+
+    .compact-row time {
+        color: var(--color-faint);
+        font: 400 0.625rem/1.6 var(--font-mono);
+    }
+
+    .compact-row h2 {
+        margin: 0;
+        font: 400 0.9375rem/1.4 var(--font-serif);
+    }
+
+    .compact-bottom {
+        grid-column: 2;
+        min-width: 0;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+    }
+
+    .compact-category {
+        color: var(--color-muted);
+        grid-column: 3;
+        grid-row: 1;
+        justify-self: end;
+        font: 400 0.6875rem/1.5 var(--font-mono);
+    }
+
+    .compact-row.with-category {
+        grid-template-columns: 6.5rem minmax(0, 1fr) auto;
+    }
+
+    .with-category .compact-bottom {
+        grid-column: 2 / -1;
+    }
+
+    .compact-actions {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.25rem;
+        margin-left: auto;
+    }
+
+    .year-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 1rem;
+        width: min(100% - 3rem, 43.75rem);
+        margin-inline: auto;
+        padding: 1.5rem clamp(1rem, 3vw, 1.5rem) 0.5rem;
+        border-inline: 1px solid var(--grid-line);
+        border-bottom: 1px solid var(--color-border);
+        color: var(--color-faint);
+        font: 400 0.6875rem/1.5 var(--font-mono);
+    }
+
+    .year-heading h2 {
+        margin: 0;
+        color: inherit;
+        font: inherit;
+    }
+
+    @media (max-width: 639px) {
+        .compact-row {
+            grid-template-columns: 5.75rem minmax(0, 1fr);
+        }
+
+        .compact-row.with-category {
+            grid-template-columns: 5.75rem minmax(0, 1fr) auto;
+        }
+
+        .compact-row time { font-size: 0.5625rem; }
+        .compact-row h2 { font-size: 0.875rem; }
+    }
 
     h2 {
         max-width: 52rem;
